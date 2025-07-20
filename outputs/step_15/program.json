@@ -3,15 +3,15 @@
   "children": [
     {
       "type": "Circle",
-      "x": 30,
+      "x": 40,
       "y": 40,
       "r": 10
     },
     {
       "type": "Square",
-      "x": 55,
-      "y": 60,
-      "size": 10
+      "x": 40,
+      "y": 40,
+      "size": 0
     }
   ]
 }

@@ -4,6 +4,8 @@ from PIL import Image
 import base64
 import os
 import json
+from utils import crop_difference_region
+import re
 
 # Load from environment variable
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -85,11 +87,11 @@ ONLY respond with the JSON object — no explanation, no markdown.
     except Exception as e:
         raise ValueError(f"Failed to parse agent output:\n{content}") from e
 
-
 def call_vlm_agent_with_reflexion(current_img, target_img, program_code, prev_iou, current_iou):
-
     current_b64 = image_to_base64(current_img)
     target_b64 = image_to_base64(target_img)
+    diff_crop = crop_difference_region(current_img, target_img)
+    diff_b64 = image_to_base64(diff_crop)
 
     improved = current_iou > prev_iou
     feedback = "Good progress ✅ IoU improved." if improved else "Failed ⚠️ — IoU dropped or unchanged."
@@ -101,13 +103,19 @@ Previous IoU: {prev_iou:.3f}
 Current IoU: {current_iou:.3f}
 Feedback: {feedback}
 
+Also shown is a **highlighted diff region** — the area where the current image differs from the target.
+Focus your edit suggestion in this area.
+
 Here is the current program:
 {json.dumps(program_code, indent=2)}
 
-Suggest ONE new edit to improve IoU with the target image.
+Step-by-step:
+1. Briefly explain **why** the current output differs from the target. (Thought)
+2. You must suggest ONE atomic **edit**, not a full program.
 
-Valid edit formats:
-1. Insert:
+Valid edit formats (JSON with an "action" key):
+
+Insert:
 {{
   "action": "insert_child",
   "target_path": [],
@@ -117,7 +125,7 @@ Valid edit formats:
   }}
 }}
 
-2. Modify:
+Modify:
 {{
   "action": "modify_param",
   "target_path": [int, ...],
@@ -125,17 +133,22 @@ Valid edit formats:
   "value": int
 }}
 
-Only return the JSON. No explanation.
+Output format:
+Thought: <your reasoning here>
+
+```json
+<your proposed edit here>
 """
 
     messages = [
-        {"role": "system", "content": "You are a VLM agent that edits shape programs to match target images."},
-        {"role": "user", "content": [
-            {"type": "text", "text": prompt},
-            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{current_b64}"}},
-            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{target_b64}"}}
-        ]}
-    ]
+    {"role": "system", "content": "You are a VLM agent that edits shape programs to match target images."},
+    {"role": "user", "content": [
+        {"type": "text", "text": prompt},
+        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{current_b64}", "detail": "low"}},
+        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{target_b64}", "detail": "low"}},
+        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{diff_b64}", "detail": "high"}},
+    ]}
+]
 
     response = openai.chat.completions.create(
         model="gpt-4o",
@@ -146,14 +159,15 @@ Only return the JSON. No explanation.
 
     content = response.choices[0].message.content.strip()
 
-    # Strip markdown if needed
-    if content.startswith("```json"):
-        content = content.split("```json")[1].split("```")[0].strip()
-    elif content.startswith("```"):
-        content = content.split("```")[1].split("```")[0].strip()
+    # Extract thought and edit using regex
+    thought_match = re.search(r"Thought:\s*(.*?)\n```", content, re.DOTALL)
+    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
 
-    try:
-        edit = json.loads(content)
-        return {"thought": "Reflexion-adjusted edit", "edit": edit}
-    except Exception as e:
-        raise ValueError(f"Could not parse agent response:\n{content}") from e
+    if not json_match:
+        raise ValueError(f"Could not parse agent response:\n{content}")
+
+    thought = thought_match.group(1).strip() if thought_match else "No thought provided"
+    edit = json.loads(json_match.group(1))
+
+    return {"thought": thought, "edit": edit}
+
