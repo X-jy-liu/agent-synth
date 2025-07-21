@@ -126,7 +126,17 @@ for step in range(max_steps):
     if best["iou"] > best_overall["iou"]:
         best_overall = best
 
-# === results ===
+# === save results ===
+output_file = output_dir / "final_result.json"
+with open(output_file, "w") as f:
+    json.dump(
+    {
+        "best_iou": best_overall["iou"],
+        "best_step": best_step,
+        "program": best_overall["program"]
+    }, f, indent=2)
+
+print(f"\nResults saved to {output_file}")
 print(f"\n=== Best Overall Result ===")
 print(f"Best IoU: {best_overall['iou']:.3f} at step {best_step}")
 print(f"Program: {json.dumps(best_overall['program'], indent=2)}")
@@ -145,4 +155,7 @@ axs[2].set_title("Difference")
 for ax in axs:
     ax.axis("off")
 plt.tight_layout()
+# === save the final images ===
+final_img.save(output_dir / "final_image.png")
+diff_img.save(output_dir / "final_diff.png")
 plt.show()
