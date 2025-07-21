@@ -18,9 +18,33 @@ agent-synth/
 ## 🧠 Pipeline Overview
 
 1. **Initialize**
-   - Define a *ground truth program* and an *initial (noisy) program*.
-   - Render both into images using `render_program`.
-   - Compute initial IoU as similarity signal.
+
+    - Define a *ground truth program* and an *initial (noisy) program*.
+    - Render both into images using `render_program`.
+    - Compute initial IoU as similarity signal.
+
+    **Ground truth program:**
+    ```json
+    {
+      "type": "Add",
+      "children": [
+        {"type": "Circle", "x": 30, "y": 30, "r": 10},
+        {"type": "Square", "x": 60, "y": 60, "size": 15}
+      ]
+    }
+    ```
+    ![Ground-truth Image](readme_images/ground_truth.png)
+
+    **Initial (noisy) program:**
+    ```json
+    {
+      "type": "Add",
+      "children": [
+        {"type": "Circle", "x": 40, "y": 40, "r": 5}
+      ]
+    }
+    ```
+    ![Initial (noisy) Image](readme_images/initial_image.png)
 
 2. **Beam Search with Reflexion**
    - At each step, GPT-4V observes:
@@ -33,6 +57,7 @@ agent-synth/
      - Provides a **thought** explaining the visual gap.
      - Outputs a single **JSON edit** (insert, modify, delete, or replace).
    - The edit is applied using `apply_edit`, and the new IoU is computed.
+   **PS:** In this simplified situation, there are only cube and circle existed in the scene and insert_child action given by edit can only choose from cube and circle
 
 3. **Search Strategy**
    - Beam width = 15; max steps = 20
