@@ -1,20 +1,20 @@
 {
-  "best_iou": 0.7768595041322314,
-  "best_step": 15,
+  "best_iou": 0.4056382145653876,
+  "best_step": 20,
   "program": {
     "type": "Add",
     "children": [
       {
         "type": "Circle",
-        "x": 30,
+        "x": 40,
         "y": 30,
-        "r": 10
+        "r": 15
       },
       {
         "type": "Square",
         "x": 60,
         "y": 60,
-        "size": 10
+        "size": 20
       }
     ]
   }

@@ -97,48 +97,43 @@ def call_vlm_agent_with_reflexion(current_img, target_img, program_code, prev_io
     feedback = "Good progress ✅ IoU improved." if improved else "Failed ⚠️ — IoU dropped or unchanged."
 
     prompt = f"""
-You are improving a shape-based image synthesis program.
+    You are improving a shape-based image synthesis program.
 
-Previous IoU: {prev_iou:.3f}
-Current IoU: {current_iou:.3f}
-Feedback: {feedback}
+    Previous IoU: {prev_iou:.3f}
+    Current IoU: {current_iou:.3f}
+    Feedback: {feedback}
 
-Also shown is a **highlighted diff region** — the area where the current image differs from the target.
-Focus your edit suggestion in this area.
+    Also shown is a **highlighted diff region** — the area where the current image differs from the target.
+    Focus your edit suggestion in this area.
 
-Here is the current program:
-{json.dumps(program_code, indent=2)}
+    Here is the current program:
+    {json.dumps(program_code, indent=2)}
 
-Step-by-step:
-1. Briefly explain **why** the current output differs from the target. (Thought)
-2. You must suggest ONE atomic **edit**, not a full program.
+    Step-by-step:
+    1. Briefly explain your reasoning in the `thought` field.
+    2. Then, call the `propose_edit` function with ONE atomic edit only.
 
-Valid edit formats (JSON with an "action" key):
+    Valid edit formats (JSON with an "action" key):
 
-Insert:
-{{
-  "action": "insert_child",
-  "target_path": [],
-  "new_node": {{
-    "type": "Circle" | "Square",
-    "x": int, "y": int, "r" or "size": int
-  }}
-}}
+    Insert:
+    {{
+    "action": "insert_child",
+    "target_path": [],
+    "new_node": {{
+        "type": "Circle" | "Square",
+        "x": int, "y": int, "r" or "size": int
+    }}
+    }}
 
-Modify:
-{{
-  "action": "modify_param",
-  "target_path": [int, ...],
-  "param": "x" | "y" | "r" | "size",
-  "value": int
-}}
+    Modify:
+    {{
+    "action": "modify_param",
+    "target_path": [int, ...],
+    "param": "x" | "y" | "r" | "size",
+    "value": int
+    }}
 
-Output format:
-Thought: <your reasoning here>
-
-```json
-<your proposed edit here>
-"""
+    """
 
     messages = [
     {"role": "system", "content": "You are a VLM agent that edits shape programs to match target images."},
@@ -147,8 +142,8 @@ Thought: <your reasoning here>
         {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{current_b64}", "detail": "low"}},
         {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{target_b64}", "detail": "low"}},
         {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{diff_b64}", "detail": "high"}},
-    ]}
-]
+        ]}
+    ]
 
     response = openai.chat.completions.create(
         model="gpt-4o",
@@ -171,3 +166,140 @@ Thought: <your reasoning here>
 
     return {"thought": thought, "edit": edit}
 
+def call_vlm_agent_with_reflexion_tool_calling(current_img, target_img, program_code, prev_iou, current_iou):
+    current_b64 = image_to_base64(current_img)
+    target_b64 = image_to_base64(target_img)
+    diff_crop = crop_difference_region(current_img, target_img)
+    diff_b64 = image_to_base64(diff_crop)
+
+    improved = current_iou > prev_iou
+    feedback = "Good progress ✅ IoU improved." if improved else "Failed ⚠️ — IoU dropped or unchanged."
+
+    prompt = f"""
+You are improving a shape-based image synthesis program.
+
+Previous IoU: {prev_iou:.3f}
+Current IoU: {current_iou:.3f}
+Feedback: {feedback}
+
+Also shown is a **highlighted diff region** — the area where the current image differs from the target.
+Focus your edit suggestion in this area.
+
+Here is the current program:
+{json.dumps(program_code, indent=2)}
+
+Step-by-step:
+1. Briefly explain **why** the current output differs from the target.
+2. Then, call the `propose_edit` function with ONE atomic edit only.
+
+Valid atomic edits:
+
+Insert:
+- action: "insert_child"
+- target_path: []
+- new_node: {{
+    "type": "Circle" or "Square",
+    "x": int, "y": int, "r" or "size": int
+}}
+
+Modify:
+- action: "modify_param"
+- target_path: [int, ...]
+- param: "x" | "y" | "r" | "size"
+- value: int
+"""
+
+    messages = [
+        {"role": "system", "content": "You are a VLM agent that edits shape programs to match target images."},
+        {"role": "user", "content": [
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{current_b64}", "detail": "low"}},
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{target_b64}", "detail": "low"}},
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{diff_b64}", "detail": "high"}},
+        ]}
+    ]
+
+    tool_spec = [
+        {
+            "type": "function",
+            "function": {
+                "name": "propose_edit",
+                "description": "Suggest a single atomic edit to improve the shape program.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "thought": {
+                            "type": "string",
+                            "description": "A brief explanation for why this edit was proposed"
+                        },
+                        "action": {
+                            "type": "string",
+                            "enum": ["insert_child", "modify_param"]
+                        },
+                        "target_path": {
+                            "type": "array",
+                            "items": {"type": "integer"},
+                            "description": "Path to the node to edit"
+                        },
+                        "param": {
+                            "type": "string",
+                            "enum": ["x", "y", "r", "size"],
+                            "description": "Parameter to change (only for modify_param)"
+                        },
+                        "value": {
+                            "type": "integer",
+                            "description": "New parameter value (only for modify_param)"
+                        },
+                        "new_node": {
+                            "type": "object",
+                            "properties": {
+                                "type": {"type": "string", "enum": ["Circle", "Square"]},
+                                "x": {"type": "integer"},
+                                "y": {"type": "integer"},
+                                "r": {"type": "integer"},
+                                "size": {"type": "integer"}
+                            },
+                            "required": ["type", "x", "y"],
+                            "description": "Node to insert (only for insert_child)"
+                        }
+                    },
+                    "required": ["thought", "action", "target_path"]
+                }
+            }
+        }
+    ]
+
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        tools=tool_spec,
+        tool_choice={
+                "type": "function",
+                "function": {"name": "propose_edit"}
+            },
+        temperature=0.2,
+        max_tokens=500
+    )
+
+    response_message = response.choices[0].message
+
+    if response_message.tool_calls:
+        tool_call = response_message.tool_calls[0]
+        arguments = json.loads(tool_call.function.arguments)
+        thought = arguments.pop("thought", "No thought provided")
+        return {
+            "thought": thought,
+            "edit": arguments
+        }
+    else:
+        # Fallback to auto tool_choice to get free-form explanation
+        fallback_response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            tools=tool_spec,
+            tool_choice="auto",
+            temperature=0.4,
+            max_tokens=500
+        )
+        print("⚠️ No tool call made. Fallback response:\n", fallback_response.choices[0].message.content)
+        raise ValueError("No tool call made. Agent did not return an edit.")
