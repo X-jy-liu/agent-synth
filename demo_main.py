@@ -5,8 +5,8 @@ from PIL import ImageChops
 
 from render_engine import render_program
 from tree_editor import apply_edit
-from vlm_agent import call_vlm_agent_with_reflexion, call_vlm_agent_with_reflexion_tool_calling
-from utils import compute_iou
+from vlm_agent_tool_call import vlm_zoom_select, vlm_propose_edit, crop_object_region
+from utils import compute_iou, crop_difference_region
 
 # === Config ===
 beam_width = 15
@@ -19,7 +19,6 @@ output_dir.mkdir(exist_ok=True)
 gt_program = {
     "type": "Add",
     "children": [
-        {"type": "Circle", "x": 30, "y": 30, "r": 10},
         {"type": "Square", "x": 60, "y": 60, "size": 15}
     ]
 }
@@ -28,7 +27,7 @@ gt_program = {
 init_program = {
     "type": "Add",
     "children": [
-        {"type": "Circle", "x": 40, "y": 40, "r": 5}
+        {"type": "Square", "x": 40, "y": 40, "size": 5}
     ]
 }
 
@@ -64,15 +63,36 @@ for step in range(max_steps):
             break
 
         try:
-            result = call_vlm_agent_with_reflexion_tool_calling(
+            diff_img = crop_difference_region(current_img, gt_img)
+            target_path = vlm_zoom_select(
                 current_img=current_img,
                 target_img=gt_img,
+                diff_img=diff_img,
                 program_code=program,
                 prev_iou=prev_iou,
                 current_iou=iou
             )
-            edit = result["edit"]
-            thought = result["thought"]
+
+            print(f" Beam[{i}] Selected target path: {target_path}")
+
+            current_crop, _ = crop_object_region(program, target_path, current_img)
+            target_crop, _ = crop_object_region(program, target_path, gt_img)
+            diff_crop, _ = crop_object_region(program, target_path, diff_img)
+            # save the cropped images for debugging
+            current_crop.save(output_dir / f"step_{step}" / f"current_crop_{i}.png")
+            target_crop.save(output_dir / f"step_{step}" / f"target_crop_{i}.png")
+            diff_crop.save(output_dir / f"step_{step}" / f"diff_crop_{i}.png")
+
+            memory = state.get("memory", [])
+            thought, edit = vlm_propose_edit(
+                current_crop=current_crop,
+                target_crop=target_crop,
+                diff_crop=diff_crop,
+                program_code=program,
+                target_path=target_path,
+                memory=memory
+            )
+
             print(f" Beam[{i}] Edit: {json.dumps(edit, indent=2)}")
             print(f" Beam[{i}] Thought: {thought}")
 
@@ -82,7 +102,15 @@ for step in range(max_steps):
 
             if new_iou < prev_iou:
                 print(f"❌ Rejecting edit: IoU dropped from {prev_iou:.3f} to {new_iou:.3f}")
-                continue  # skip this candidate
+                continue
+
+            new_memory = memory[-2:] + [{
+                "thought": thought,
+                "edit": edit,
+                "prev_iou": iou,
+                "current_iou": new_iou,
+                "target_path": target_path
+            }]
 
             candidates.append({
                 "program": new_program,
@@ -91,8 +119,10 @@ for step in range(max_steps):
                     "edit": edit,
                     "thought": thought,
                     "iou": new_iou
-                }]
+                }],
+                "memory": new_memory
             })
+
         except Exception as e:
             print(f"⚠️ Beam[{i}] failed:", e)
             continue
@@ -104,13 +134,10 @@ for step in range(max_steps):
 
     beam = sorted(candidates, key=lambda x: -x["iou"])[:beam_width]
     if not beam:
-        # No valid candidates, restore best from previous step
         print("❌ All edits reduced IoU — restoring previous best.")
         beam = [best]
         continue
 
-
-    # Save top candidate of the step
     if beam[0]["iou"] > global_best_iou:
         global_best_iou = beam[0]["iou"]
         print(f"🌟 New global best IoU: {global_best_iou:.3f}")
@@ -118,7 +145,7 @@ for step in range(max_steps):
         best_iou = beam[0]["iou"]
         best = beam[0]
     else:
-        best = beam[0]  # fallback to current top beam candidate, still a full dict
+        best = beam[0]
 
     step_dir = output_dir / f"step_{step}"
     step_dir.mkdir(exist_ok=True)
@@ -162,7 +189,6 @@ axs[2].set_title("Difference")
 for ax in axs:
     ax.axis("off")
 plt.tight_layout()
-# === save the final images ===
 final_img.save(output_dir / "final_image.png")
 diff_img.save(output_dir / "final_diff.png")
 plt.show()

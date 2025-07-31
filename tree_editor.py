@@ -30,7 +30,18 @@ def apply_edit(tree, edit):
         subtree["children"].append(edit["new_node"])
         return tree
 
-    elif edit["action"] == "modify_param":
+    elif edit["action"] == "modify_size":
+        path = edit["target_path"]
+        subtree = tree
+        for i in path:
+            subtree = subtree["children"][i]
+        param = edit["param"]
+        value = edit["value"]
+        if param in subtree:
+            subtree[param] = value
+        return tree
+    
+    elif edit["action"] == "modify_position":
         path = edit["target_path"]
         subtree = tree
         for i in path:
