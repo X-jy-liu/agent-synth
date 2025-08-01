@@ -1,64 +1,58 @@
 import copy
 
+def ensure_add_root(program):
+    if not program or not isinstance(program, dict):
+        return {"type": "Add", "children": []}
+    if program.get("type") != "Add":
+        return {"type": "Add", "children": [program]}
+    return program
+
 def apply_edit(tree, edit):
-    """
-    Applies an edit to the syntax tree.
-    edit: a dictionary with keys like:
-    {
-        "action": "replace",
-        "target_path": [0],  # e.g., child index
-        "new_node": {"type": "Circle", "x": 10, "y": 10, "r": 5}
-    }
-    """
-    tree = copy.deepcopy(tree)
+    tree = ensure_add_root(copy.deepcopy(tree))
+    path = edit.get("target_path", [])
+    action = edit.get("action")
 
-    if edit["action"] == "replace":
-        path = edit["target_path"]
-        subtree = tree
-        for i in path[:-1]:
-            subtree = subtree["children"][i]
-        subtree["children"][path[-1]] = edit["new_node"]
-        return tree
+    # Traverse with safe padding
+    subtree = tree
+    for i in path:
+        if "children" not in subtree:
+            subtree["children"] = []
+        while len(subtree["children"]) <= i:
+            subtree["children"].append({})
+        subtree = subtree["children"][i]
 
-    elif edit["action"] == "insert_child":
-        path = edit["target_path"]
-        subtree = tree
-        for i in path:
-            subtree = subtree["children"][i]
+    if action == "insert_child":
         if "children" not in subtree:
             subtree["children"] = []
         subtree["children"].append(edit["new_node"])
-        return tree
 
-    elif edit["action"] == "modify_size":
-        path = edit["target_path"]
-        subtree = tree
-        for i in path:
-            subtree = subtree["children"][i]
-        param = edit["param"]
-        value = edit["value"]
-        if param in subtree:
-            subtree[param] = value
-        return tree
-    
-    elif edit["action"] == "modify_position":
-        path = edit["target_path"]
-        subtree = tree
-        for i in path:
-            subtree = subtree["children"][i]
-        param = edit["param"]
-        value = edit["value"]
-        if param in subtree:
-            subtree[param] = value
-        return tree
-
-    elif edit["action"] == "delete":
-        path = edit["target_path"]
-        subtree = tree
+    elif action == "replace":
+        parent = tree
         for i in path[:-1]:
-            subtree = subtree["children"][i]
-        del subtree["children"][path[-1]]
-        return tree
+            if "children" not in parent:
+                parent["children"] = []
+            while len(parent["children"]) <= i:
+                parent["children"].append({})
+            parent = parent["children"][i]
+        parent["children"][path[-1]] = edit["new_node"]
+
+    elif action in ("modify_size", "modify_position"):
+        param = edit.get("param")
+        value = edit.get("value")
+        if param:
+            subtree[param] = value
+
+    elif action == "delete":
+        parent = tree
+        for i in path[:-1]:
+            if "children" not in parent:
+                parent["children"] = []
+            while len(parent["children"]) <= i:
+                parent["children"].append({})
+            parent = parent["children"][i]
+        del parent["children"][path[-1]]
 
     else:
-        raise ValueError(f"Unsupported edit type: {edit['action']}")
+        raise ValueError(f"Unsupported edit type: {action}")
+
+    return tree

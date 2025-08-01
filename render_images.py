@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from PIL import Image
-from lark import Lark
 import json
 import pickle
 from td.environments.tinysvgoffset_primitives import TinySVGOffset_primitives

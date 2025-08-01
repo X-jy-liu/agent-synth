@@ -1,6 +1,8 @@
 import base64
 from io import BytesIO
+import os
 from PIL import Image
+from google.generativeai.types import content_types
 
 # Optional imports depending on backend
 try:
@@ -77,9 +79,27 @@ def ask_claude_multi(images: list[Image.Image], question: str, api_key: str) -> 
 def ask_gemini_multi(images: list[Image.Image], question: str, api_key: str) -> str:
     if genai is None:
         raise ImportError("google.generativeai package is not installed.")
+    if not api_key:
+        raise ValueError("GOOGLE_API_KEY is missing.")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-pro-vision")
-    inputs = [question] + images
+    model = genai.GenerativeModel("gemini-1.5-pro")
+
+    # Gemini accepts [text, image1, image2, ...] directly
+    inputs = [question] + images  # ✅ just pass PIL.Image.Image objects directly
+
     response = model.generate_content(inputs, stream=False)
     return response.text + "\n[model: Gemini 1.5]"
+
+
+if __name__ == "__main__":
+    print("Testing multi-image VLM API calls...")
+    # use gemini as an example
+    images = [Image.open("test_gt_image.png"), Image.open("test_init_image.png")]
+    question = "What are the differences between these two images?"
+    import os
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if api_key:
+        print("Using Gemini API key from environment variable.")
+    response = ask_gemini_multi(images, question, api_key)
+    print(response)

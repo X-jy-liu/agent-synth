@@ -11,16 +11,15 @@ from PIL import ImageEnhance
 import cv2
 from tree_editor import apply_edit
 from render_engine import render_program
+import ast
+import os
 
 class VLMEditAgent:
     def __init__(self,
                 vlm_type: str,
                 device: str = None,
                 clip_model_name: str = "ViT-B/32",
-                output_dir: str = "outputs",
-                openai_api_key: str = None,
-                anthropic_api_key: str = None,
-                gemini_api_key: str = None):
+                output_dir: str = "outputs"):
         
         self.vlm_type = vlm_type.lower()
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -28,9 +27,9 @@ class VLMEditAgent:
         self.output_dir.mkdir(exist_ok=True)
 
         # Store keys
-        self.openai_api_key = openai_api_key
-        self.anthropic_api_key = anthropic_api_key
-        self.gemini_api_key = gemini_api_key
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        # self.anthropic_api_key = anthropic_api_key
+        self.gemini_api_key = os.getenv("GOOGLE_API_KEY")
 
         # CLIP
         self.clip_model = None
@@ -54,16 +53,12 @@ class VLMEditAgent:
         else:
             raise NotImplementedError(f"No VLM backend for {self.vlm_type}")
 
-    def primitive_edit(self, candidate_image, gt_image):
+    def primitive_edit(self, candidate_image, gt_image) -> list:
         """
-        Compare the candidate image and ground truth image.
-        If any primitives are missing in the candidate, propose an insert edit.
-        
+        One-shot comparison: check primitive types and propose edits if needed.
+
         Returns:
-            {
-                "need_edit": True or False,
-                "edit": {...}  # Only if True
-            }
+            A list of proposed edits, or an empty list if no edits are needed.
         """
         question = (
             "You are a vision-based program repair agent.\n"
@@ -82,22 +77,20 @@ class VLMEditAgent:
         response = self.vlm_ask_multi([candidate_image, gt_image], question)
         print("[primitive_edit] VLM Response:\n", response)
 
-        # Try to extract JSON list of edits
         try:
-            # Extract list of JSON-like dicts using regex fallback
             match = re.search(r"\[\s*{.*?}\s*\]", response, re.DOTALL)
             if match:
-                edits = json.loads(match.group(0).replace("'", '"'))
+                try:
+                    edits = json.loads(match.group(0).replace("'", '"'))
+                except:
+                    edits = ast.literal_eval(match.group(0))  # fallback
             else:
                 edits = []
         except Exception as e:
             print("[primitive_edit] Failed to parse edit list:", e)
             edits = []
 
-        if edits:
-            return {"need_edit": True, "edit": edits[0]}  # Only apply first edit
-        else:
-            return {"need_edit": False}
+        return edits
 
     def bounding_box_edit(self, candidate_image, gt_image, image_size):
         """
@@ -214,44 +207,78 @@ class VLMEditAgent:
             "overlay": overlay
         }
 
-    def reflexion_phase_1(self, memory, program, current_image, gt_image):
+    def reflexion_phase_1(self, memory, program, current_image, gt_image, max_attempts):
         """
         Align the types of primitives in the candidate and ground-truth images.
+        Uses VLM-based reflection to judge whether each proposed edit is valid.
+        Even when no edits are proposed, ask the VLM to confirm alignment.
         Stores successful edits in memory and returns the updated program and image.
         """
-        max_attempts = 5
         attempts = 0
         failed_edits = []
 
         while attempts < max_attempts:
-            result = self.primitive_edit(current_image, gt_image)
+            proposed_edits = self.primitive_edit(current_image, gt_image)
 
-            if not result["need_edit"]:
-                print("[Phase 1] Primitive types aligned.")
-                return program, current_image
+            # If no edits were proposed, still ask the VLM if types now match
+            if not proposed_edits:
+                print(f"[Phase 1] No edits proposed at attempt {attempts+1}. Verifying with VLM...")
 
-            edit = result["edit"]
-            memory.setdefault("phase1_edits", []).append(edit)
+                reflect_question = (
+                    "You are a visual geometry assistant.\n"
+                    "Determine if the candidate image contains the same types of geometric primitives "
+                    "as the ground-truth image (e.g., Circle, Square, Triangle, Ellipse).\n"
+                    "Reply with 'yes' if the primitive types match, otherwise reply with 'no'."
+                )
+
+                reflect_response = self.vlm_ask_multi([current_image, gt_image], reflect_question)
+                print(f"[Phase 1] Final Reflect Response (attempt {attempts+1}):\n", reflect_response)
+
+                if reflect_response.strip().lower().startswith("yes"):
+                    print("[Phase 1] VLM confirms alignment. Done.")
+                    return program, current_image
+                else:
+                    print("[Phase 1] VLM disagrees. Continuing attempts.")
+                    attempts += 1
+                    continue
+
+            # Otherwise, try applying the first edit
+            edit = proposed_edits[0]
             print(f"[Phase 1] Attempt {attempts+1}: Proposed edit -> {edit}")
+            print(f"the current program is: {program}")
+            print(f"the edit is: {edit}")
+            new_program = apply_edit(program, edit)
+            new_image = render_program(new_program)
 
-            # Apply the edit to the program (user must define this)
-            program = apply_edit(program, edit)
+            # Reflect on whether the edit worked
+            reflect_question = (
+                "You are a visual geometry assistant.\n"
+                "You have been asked to reflect on a proposed edit to a candidate image.\n"
+                f"The current program is:\n{program}\n"
+                f"The proposed edit is:\n{json.dumps(edit, indent=2)}\n\n"
+                f"Previous failed edits:\n{json.dumps(failed_edits, indent=2)}\n"
+                "Does this edit make the candidate image contain the same types of primitives as the ground truth image?\n"
+                "Reply with 'yes' if it improves. If not, propose a new edit to fix it.\n"
+                "Format your answer as a list of edits using this format:\n"
+                "  { 'action': 'insert_child', 'target_path': [0], 'new_node': { 'type': 'Circle', 'x': 30, 'y': 30, 'r': 10 } }"
+            )
 
-            # Re-render the updated program into a new image (user must define this)
-            current_image = render_program(program)
+            reflect_response = self.vlm_ask_multi([new_image, gt_image], reflect_question)
+            print(f"[Phase 1] Reflect Response (attempt {attempts+1}):\n", reflect_response)
 
-            # Optional: verify if primitive types now match; if not, continue
-            result_check = self.primitive_edit(current_image, gt_image)
-            if not result_check["need_edit"]:
-                print("[Phase 1] Alignment achieved after edit.")
-                return program, current_image
-
-            failed_edits.append((edit, result_check))
-            attempts += 1
+            if reflect_response.strip().lower().startswith("yes"):
+                program = new_program
+                current_image = new_image
+                memory.setdefault("phase1_edits", []).append(edit)
+                print(f"[Phase 1] Accepted edit at attempt {attempts+1}.")
+                continue
+            else:
+                print(f"[Phase 1] Reflection suggests edit was insufficient.")
+                failed_edits.append(edit)
+                attempts += 1
 
         print("[Phase 1] Max attempts reached. Returning last candidate.")
         return program, current_image
-
 
     def reflexion_phase_2(self, memory, program, current_image, gt_image, max_steps=5):
         """
