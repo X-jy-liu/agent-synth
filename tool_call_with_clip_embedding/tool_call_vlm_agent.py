@@ -53,7 +53,7 @@ class VLMEditAgent:
         else:
             raise NotImplementedError(f"No VLM backend for {self.vlm_type}")
 
-    def primitive_edit(self, candidate_image, gt_image) -> list:
+    def primitive_edit(self, candidate_image, ground_truth_image) -> list:
         """
         One-shot comparison: check primitive types and propose edits if needed.
 
@@ -63,18 +63,25 @@ class VLMEditAgent:
         question = (
             "You are a vision-based program repair agent.\n"
             "Task:\n"
-            "1. Look at both images provided.\n"
-            "2. Identify all geometric primitives in each (e.g., Square, Circle, Triangle, Ellipse).\n"
-            "3. Compare them: are the same types of primitives present in both?\n"
-            "4. If any primitives are **missing** in the candidate image, propose a fix.\n\n"
-            "Your fix should include an 'insert' action to add the missing shape(s).\n"
-            "Use approximate positions and sizes — they do not need to be precise.\n"
-            "Format your answer as a list of edits using this format:\n"
-            "  { 'action': 'insert_child', 'target_path': [0], 'new_node': { 'type': 'Circle', 'x': 30, 'y': 30, 'r': 10 } }\n"
-            "Return only the list of edits or an empty list if no edits are needed."
+            "1. You will be shown two images side-by-side:\n"
+            "   - Image 1: The **candidate image** (possibly corrupted or missing shapes)\n"
+            "   - Image 2: The **Ground truth image** (correct version)\n"
+            "2. Identify and name only the clearly visible geometric shapes in each image. Do not assume any shape unless it is clearly present and distinct. If only one shape is visible, say so.\n"
+            "3. Compare them: are the same types and number of primitives present in both?\n"
+            "4. If any primitives are **missing** in the candidate image (compared to the reference), propose a fix.\n\n"
+            "Your fix must include an 'insert_child' action to add each missing shape.\n"
+            "- Only insert shapes that clearly appear in the reference but are absent in the candidate.\n"
+            "- Use approximate parameters (x, y, size/radius), but stay within a [0, 128] canvas range.\n"
+            "- Avoid placing shapes on top of existing ones.\n\n"
+            "Use the following format for each fix:\n"
+            "  { 'action': 'insert_child', 'target_path': [0], 'new_node': { 'type': '[Circle|Square]', 'x': [x], 'y': [y], '[r|s]': [value] } }\n"
+            "  - Use 's' for Square (side length), 'r' for Circle (radius).\n"
+            "Return format:\n"
+            "explanation: [your reasoning here]\n"
+            "edits: [only the list of edits, or an empty list if no edits are needed."
         )
 
-        response = self.vlm_ask_multi([candidate_image, gt_image], question)
+        response = self.vlm_ask_multi([candidate_image, ground_truth_image], question)
         print("[primitive_edit] VLM Response:\n", response)
 
         try:
@@ -215,7 +222,6 @@ class VLMEditAgent:
         Stores successful edits in memory and returns the updated program and image.
         """
         attempts = 0
-        failed_edits = []
 
         while attempts < max_attempts:
             proposed_edits = self.primitive_edit(current_image, gt_image)
@@ -243,42 +249,46 @@ class VLMEditAgent:
                     continue
 
             # Otherwise, try applying the first edit
-            edit = proposed_edits[0]
-            print(f"[Phase 1] Attempt {attempts+1}: Proposed edit -> {edit}")
-            print(f"the current program is: {program}")
-            print(f"the edit is: {edit}")
-            new_program = apply_edit(program, edit)
-            new_image = render_program(new_program)
+            for edit in proposed_edits:
+                updated_program = apply_edit(program, edit)
+                program = updated_program
+                current_image = render_program(program)
+                memory.setdefault("phase1_edits", []).append(edit)
+            print(f"Program after edits in attempt {attempts+1}:\n", program)
+            new_image = render_program(program)
 
             # Reflect on whether the edit worked
             reflect_question = (
                 "You are a visual geometry assistant.\n"
-                "You have been asked to reflect on a proposed edit to a candidate image.\n"
-                f"The current program is:\n{program}\n"
-                f"The proposed edit is:\n{json.dumps(edit, indent=2)}\n\n"
-                f"Previous failed edits:\n{json.dumps(failed_edits, indent=2)}\n"
-                "Does this edit make the candidate image contain the same types of primitives as the ground truth image?\n"
-                "Reply with 'yes' if it improves. If not, propose a new edit to fix it.\n"
-                "Format your answer as a list of edits using this format:\n"
-                "  { 'action': 'insert_child', 'target_path': [0], 'new_node': { 'type': 'Circle', 'x': 30, 'y': 30, 'r': 10 } }"
+                "Compare the ground-truth image and the candidate image.\n"
+                "Determine whether the **types of geometric primitives** are aligned.\n\n"
+                "- Only consider shape types (e.g., Circle, Square).\n"
+                "- Ignore position or size.\n"
+                "- Reply with 'yes' in judgement if both images contain exactly the same types of primitives (regardless of number or placement).\n"
+                "- Reply with 'no' in judgement if any primitive type is present in one image but missing in the other."
+                "Return formatted as follows:\n"
+                "Explanation: [your reasoning here]\n"
+                "Judgment: [yes/no]\n"
             )
 
             reflect_response = self.vlm_ask_multi([new_image, gt_image], reflect_question)
             print(f"[Phase 1] Reflect Response (attempt {attempts+1}):\n", reflect_response)
 
-            if reflect_response.strip().lower().startswith("yes"):
-                program = new_program
-                current_image = new_image
-                memory.setdefault("phase1_edits", []).append(edit)
-                print(f"[Phase 1] Accepted edit at attempt {attempts+1}.")
-                continue
-            else:
-                print(f"[Phase 1] Reflection suggests edit was insufficient.")
-                failed_edits.append(edit)
-                attempts += 1
+            judgment_line = next(
+                (line for line in reflect_response.splitlines() if line.lower().startswith("judgment:")), 
+                ""
+            )
+            judgment = judgment_line.split(":")[-1].strip().lower()
 
-        print("[Phase 1] Max attempts reached. Returning last candidate.")
-        return program, current_image
+            if judgment == "yes":
+                current_image = new_image
+                print(f"[Phase 1] Accepted edit at attempt {attempts+1}.")
+                return program, current_image, memory
+            else:
+                print(f"[Phase 1] Reflection suggests edit was insufficient at attempt {attempts+1}.")
+                attempts += 1
+        print("[Phase 1] Max attempts reached. The edit was not successful.")
+        return program, current_image, memory
 
     def reflexion_phase_2(self, memory, program, current_image, gt_image, max_steps=5):
         """

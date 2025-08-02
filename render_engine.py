@@ -4,22 +4,23 @@ def render_program(program, size=(100, 100)):
     img = Image.new("L", size, 0)
     draw = ImageDraw.Draw(img)
 
-    # Handle empty or invalid input early
-    if not program or not isinstance(program, dict) or "type" not in program:
-        return img  # return empty canvas
-
     def draw_node(node):
-        if node["type"] == "Circle":
+        if not isinstance(node, dict):
+            return
+        node_type = node.get("type")
+
+        if node_type == "Circle":
             x, y, r = node["x"], node["y"], node["r"]
             draw.ellipse([x - r, y - r, x + r, y + r], fill=255)
-        elif node["type"] == "Square":
-            x, y, s = node["x"], node["y"], node["size"]
+
+        elif node_type == "Square":
+            x, y, s = node["x"], node["y"], node["s"]
             draw.rectangle([x, y, x + s, y + s], fill=255)
 
-    if program["type"] == "Add":
-        for child in program["children"]:
-            draw_node(child)
-    else:
-        draw_node(program)
+        # Recurse into children if present
+        if "children" in node:
+            for child in node["children"]:
+                draw_node(child)
 
+    draw_node(program)
     return img
