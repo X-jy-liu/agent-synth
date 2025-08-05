@@ -99,6 +99,30 @@ class VLMEditAgent:
 
         return edits
 
+    def build_bounding_box_prompt(self, image_size):
+        W, H = image_size
+        return (
+            "You are a visual geometry assistant.\n\n"
+            "You will be shown two images: the left is the candidate image rendered from a program, "
+            "and the right is the ground truth image. Your task is to:\n"
+            "1. Detect each geometric shape (e.g., Square, Circle, Triangle, Ellipse) in both images.\n"
+            f"2. For each shape, return an approximate bounding box: [x, y, width, height] in **pixel values**, "
+            f"for an image of size {W}×{H}.\n"
+            "   - x and y represent the **top-left corner** of the bounding box.\n"
+            "   - width and height define the size of the box.\n"
+            f"   - All values must be **integers** and within image bounds:\n"
+            f"     → x ∈ [0, {W - 1}], y ∈ [0, {H - 1}]\n"
+            f"     → x + width ≤ {W}, y + height ≤ {H}\n"
+            "   - Do not include bounding boxes that extend outside the image.\n\n"
+            "3. Group your results by image using this format:\n"
+            "{\n"
+            "  \"candidate\": [ {\"type\": \"Square\", \"bbox\": [x, y, width, height]}, ... ],\n"
+            "  \"ground_truth\": [ {\"type\": \"Circle\", \"bbox\": [x, y, width, height]}, ... ]\n"
+            "}\n\n"
+            "Important: The bounding boxes do not need to match the exact shape geometry. "
+            "They are used only to reason about object position and scale."
+        )
+
     def bounding_box_edit(self, candidate_image, gt_image, image_size):
         """
         Asks the VLM to detect approximate bounding boxes for shapes in both images.
@@ -110,20 +134,7 @@ class VLMEditAgent:
         "ground_truth": [ { "type": ..., "bbox": [x, y, w, h] (normalized) }, ... ]
         }
         """
-        question = (
-            "You are a visual geometry assistant.\n\n"
-            "You will be shown two images: the left is the candidate image rendered from a program, "
-            "and the right is the ground truth image. Your task is to:\n"
-            "1. Detect each geometric shape (e.g., Square, Circle, Triangle, Ellipse) in both images.\n"
-            "2. For each shape, return an approximate bounding box: [x, y, width, height] in **pixel values**.\n"
-            "3. Group the results by image: `candidate` and `ground_truth`.\n"
-            "Important: bounding boxes are not the true shape geometry. They are used only to reason about size and position.\n"
-            "Output must be a dictionary like this:\n"
-            "{\n"
-            "  \"candidate\": [ {\"type\": \"Square\", \"bbox\": [10, 20, 30, 30]}, ... ],\n"
-            "  \"ground_truth\": [ {\"type\": \"Circle\", \"bbox\": [15, 25, 28, 28]}, ... ]\n"
-            "}"
-        )
+        question = self.build_bounding_box_prompt(image_size)
 
         response = self.vlm_ask_multi([candidate_image, gt_image], question)
         print("[bounding_box_edit] VLM Response:\n", response)
@@ -260,7 +271,9 @@ class VLMEditAgent:
             # Reflect on whether the edit worked
             reflect_question = (
                 "You are a visual geometry assistant.\n"
-                "Compare the ground-truth image and the candidate image.\n"
+                "You are shown two images:\n"
+                "- Image One: the candidate image (new_image)\n"
+                "- Image Two: the ground-truth image (gt_image)\n"
                 "Determine whether the **types of geometric primitives** are aligned.\n\n"
                 "- Only consider shape types (e.g., Circle, Square).\n"
                 "- Ignore position or size.\n"
@@ -305,7 +318,7 @@ class VLMEditAgent:
         for step in range(max_steps):
             # Ask VLM to propose an edit
             reasoning_prompt = (
-                "You are a visual reasoning assistant refining a candidate program to better match a ground-truth image.\n"
+                "You are a visual reasoning assistant refining a candidate image (current_image) to better match a ground-truth image (gt_image).\n"
                 f"The current program is: {program}\n"
                 "Primitive types are correct. Improve the **position**, **size**, or **shape** of primitives.\n"
                 "Propose exactly one edit in this format:\n"

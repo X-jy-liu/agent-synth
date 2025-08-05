@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw
 
-def render_program(program, size=(100, 100)):
+def render_program(program, size=(128, 128)):
     img = Image.new("L", size, 0)
     draw = ImageDraw.Draw(img)
 
