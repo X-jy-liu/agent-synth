@@ -80,7 +80,7 @@ class SVGRenderer:
         circle = ET.Element("circle")
         circle.set("cx", "0")
         circle.set("cy", "0")
-        circle.set("r", str(shape.scale_x * 1))  # base radius of 1
+        circle.set("r", str(shape.scale_x * 0.5))  # base radius of 1
         return circle
     
     def _render_rectangle(self, shape: Shape) -> ET.Element:
@@ -99,8 +99,8 @@ class SVGRenderer:
         ellipse = ET.Element("ellipse")
         ellipse.set("cx", "0")
         ellipse.set("cy", "0")
-        ellipse.set("rx", str(shape.scale_x * 1))
-        ellipse.set("ry", str(shape.scale_y * 1))
+        ellipse.set("rx", str(shape.scale_x * 0.5))
+        ellipse.set("ry", str(shape.scale_y * 0.5))
         return ellipse
     
     def _render_triangle(self, shape: Shape) -> ET.Element:
@@ -227,19 +227,19 @@ class SVGRenderer:
                     output_width=png_width,
                     output_height=png_height
                 )
-                return True
+                return filename
             else:
                 print("Error: No PNG conversion library available.")
                 print("Install either: pip install cairosvg")
                 return False
                 
         except Exception as e:
-            print(f"Error saving PNG: {e}")
             return False
     
     def clear(self):
         """Clear all shapes"""
         self.shapes = []
+
 
 class SVGAgent:
     """Agent interface for creating SVG graphics"""
@@ -310,7 +310,7 @@ if __name__ == "__main__":
     {
         "shape_type": "ellipse",
         "x": 90,
-        "y": 35,
+        "y": 90,
         "scale_x": 85,
         "scale_y": 80,
         "fill_color": "purple",
@@ -318,8 +318,8 @@ if __name__ == "__main__":
     },
     {
         "shape_type": "circle",
-        "x": 45,
-        "y": 170,
+        "x": 90,
+        "y": 200,
         "scale_x": 120,
         "scale_y": 120,
         "fill_color": "blue",
@@ -330,15 +330,15 @@ if __name__ == "__main__":
         "x": 500,
         "y": 85,
         "scale_x": 220,
-        "scale_y": 26,
+        "scale_y": 20,
         "fill_color": "yellow",
-        "stroke_color": "orange",
+        "stroke_color": "blue",
         "rotation": 0
     },
     {
         "shape_type": "ellipse",
         "x": 320,
-        "y": 295,
+        "y": 170,
         "scale_x": 80,
         "scale_y": 160,
         "fill_color": "green",
@@ -346,10 +346,10 @@ if __name__ == "__main__":
     },
     {
         "shape_type": "circle",
-        "x": 75,
-        "y": 410,
-        "scale_x": 58,
-        "scale_y": 58,
+        "x": 90,
+        "y": 500,
+        "scale_x": 50,
+        "scale_y": 50,
         "fill_color": "orange",
         "stroke_color": "red"
     }
@@ -358,32 +358,64 @@ if __name__ == "__main__":
     agent.create_from_json(shapes_json)
     
     # Save the result
-    agent.save("task_svg_1.svg")
-    print("SVG saved to task_svg_1.svg")
+    agent.save("task_svg_2.svg")
+    print("SVG saved to task_svg_2.svg")
     
     # Save as PNG (requires cairosvg or Wand)
-    if agent.save_png("task_svg_1.png"):
-        print("PNG saved to task_svg_1.png")
+    if agent.save_png("task_svg_2.png"):
+        print("PNG saved to task_svg_2.png")
     
     # Example of save_json_as_png - one-step JSON to PNG
     simple_json = '''[
-        {
-            "shape_type": "rectangle",
-            "x": 64,
-            "y": 64,
-            "scale_x": 100,
-            "scale_y": 100,
-            "fill_color": "red",
-            "stroke_color": "none"
-        }
-    ]'''
-    
-    agent_png = SVGAgent(128, 128)  # Square canvas for PNG
+  {
+    "shape_type": "circle",
+    "x": 90,
+    "y": 65,
+    "scale_x": 85,
+    "scale_y": 85,
+    "fill_color": "purple",
+    "stroke_color": "none"
+  },
+  {
+    "shape_type": "circle",
+    "x": 52,
+    "y": 170,
+    "scale_x": 104,
+    "scale_y": 104,
+    "fill_color": "blue",
+    "stroke_color": "none"
+  },
+  {
+    "shape_type": "circle",
+    "x": 75,
+    "y": 410,
+    "scale_x": 56,
+    "scale_y": 56,
+    "fill_color": "orange",
+    "stroke_color": "red",
+    "stroke_width": 3
+  },
+  {
+    "shape_type": "ellipse",
+    "x": 320,
+    "y": 295,
+    "scale_x": 80,
+    "scale_y": 160,
+    "fill_color": "green",
+    "stroke_color": "black",
+    "stroke_width": 2
+  },
+  {
+    "shape_type": "rectangle",
+    "x": 495,
+    "y": 85,
+    "scale_x": 210,
+    "scale_y": 25,
+    "fill_color": "yellow",
+    "stroke_color": "none"
+  }
+]
+'''
+    agent_png = SVGAgent(600, 600)  # Square canvas for PNG
     if agent_png.save_json_as_png(simple_json, "direct_output.png"):
         print("Direct JSON to PNG saved to direct_output.png")
-    
-    # Print supported shapes
-    print("\nSupported shapes: circle, rectangle, ellipse, triangle, line, star")
-    print("Required property: shape_type")
-    print("Optional properties: x, y, scale_x, scale_y, stroke_color, fill_color, stroke_width, rotation, opacity")
-    print("\nPNG conversion requires: pip install cairosvg  OR  pip install Wand")

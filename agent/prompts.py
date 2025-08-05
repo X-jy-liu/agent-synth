@@ -141,7 +141,44 @@ Example:
 
 
 VLM_edits_sys = """
-You are analyzing two images: the first is the target image and the second is the current image. You should focus on the difference between these two images and how to make the current image closer to the target.
+You are analyzing two SVG graphics images to identify differences and suggest corrections to guide LLM to modify the current image step by step to match the target.
+
+**Target Image (First Image)**: The desired final result
+**Current Image (Second Image)**: The current state that needs modification
+
+You should focus on 1-3 shapes that need major adjustments.
+
+## Analysis Task
+
+1. **Shape-by-Shape Comparison**: 
+   - Identify each shape in both images by type (rectangle, circle, ellipse) and visual properties
+   - Match corresponding shapes between target and current images
+   - Note any missing shapes in current image or extra shapes that shouldn't be there
+
+2. **Detailed Difference Analysis**:
+   For each shape, compare:
+   - **Position**: Where is it located? (use qualitative relative descriptions)
+   - **Size**: How big is it?
+   - **Color**: Fill color and stroke color
+   - **Orientation**: Any rotation or angle differences
+   - **Visibility**: Is the shape present in both images?
+
+3. **Spatial Relationships**:
+   - How do shapes relate to each other spatially?
+   - Are there alignment issues between target and current?
+   - Note any overlapping or spacing problems
+
+## Modification Suggestions
+
+For all descriptions or modification suggestions, only use qualitative and relative descriptions, focusing on the relative size or positions to other shapes or the whole canvas.
+E.g. The width should be around one half of the canvas; the size should be doubled; the blue rectangle should just touch the red circle on its left.
+
+
+**Be specific about:**
+- Which shape you're referring to (e.g., "the blue rectangle in the top-left", "the small red circle")
+- Directional movements (left/right, up/down)
+- Size changes (bigger/smaller)
+- Exact color names when possible
 """
 
 
@@ -187,59 +224,25 @@ Guidelines:
 
 
 VLM_edits_user_2 = """
-You are analyzing two SVG graphics images to identify differences and suggest corrections.
-
-**Target Image (First Image)**: The desired final result
-**Current Image (Second Image)**: The current state that needs modification
-
-## Analysis Task
-
-1. **Shape-by-Shape Comparison**: 
-   - Identify each shape in both images by type (rectangle, circle, ellipse) and visual properties
-   - Match corresponding shapes between target and current images
-   - Note any missing shapes in current image or extra shapes that shouldn't be there
-
-2. **Detailed Difference Analysis**:
-   For each shape, compare:
-   - **Position**: Where is it located? (use approximate coordinates or relative descriptions)
-   - **Size**: How big is it? (width, height, or radius)
-   - **Color**: Fill color and stroke color
-   - **Orientation**: Any rotation or angle differences
-   - **Visibility**: Is the shape present in both images?
-
-3. **Spatial Relationships**:
-   - How do shapes relate to each other spatially?
-   - Are there alignment issues between target and current?
-   - Note any overlapping or spacing problems
-
-## Modification Suggestions
-
-Provide specific, actionable instructions:
-
-**Format your suggestions as:**
-- "Move [shape description] from [current position] to [target position]"
-- "Resize [shape description] from [current size] to [target size]" 
-- "Change [shape description] color from [current color] to [target color]"
-- "Rotate [shape description] by [degrees] clockwise/counterclockwise"
-- "Add missing [shape type] at [position] with [properties]"
-- "Remove extra [shape description] at [position]"
-
-**Be specific about:**
-- Which shape you're referring to (e.g., "the blue rectangle in the top-left", "the small red circle")
-- Directional movements (left/right, up/down, specific distances if measurable)
-- Size changes (bigger/smaller, or specific dimensions if apparent)
-- Exact color names when possible
-
-## Output Structure
-
-**DIFFERENCES FOUND:**
-[Detailed comparison of what's different]
-
-**SUGGESTED MODIFICATIONS:**
-[Numbered list of specific actions to transform current image to match target]
-
-Focus on the most important differences first - major position changes, missing/extra shapes, then fine-tune details like size and color adjustments.
+Looking at the target image (first) and current generated image (second), suggest modifications to better align the current image with the target.
 """
+
+
+VLM_edits_with_feedback_prompt = """
+Looking at the target image (first) and current generated image (second), suggest modifications to better align the current image with the target.
+
+IMPORTANT FEEDBACK: The previous suggestions below did NOT lead to better alignment with the target image:
+{previous_suggestions}
+
+Please provide NEW and DIFFERENT suggestions that:
+1. Address different aspects than the failed suggestions
+2. Take a different approach to the alignment problem
+3. Consider alternative modifications that might be more effective
+4. Focus on the most critical differences between the images
+
+Avoid repeating the same types of suggestions that failed previously. Think about alternative strategies for improvement.
+"""
+
 
 LLM_EXPRESSION_MODIFIER_PROMPT = """
 You are tasked with modifying a tinySVG expression based on VLM-suggested actions. Your goal is NOT to blindly apply the actions, but to understand the INTENT behind them and achieve the desired visual effect through optimal expression design.
