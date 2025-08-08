@@ -240,6 +240,82 @@ class Agent:
         
         return best_candidate, candidate_ious, improvement_made
     
+    def vlm_judge_similarity(self, target_image_path: str, current_image_path: str) -> Tuple[str, float]:
+        """
+        Judge the similarity of the generated image with the target image.
+        
+        Args:
+            target_image_path: Path to the target image
+            current_image_path: Path to the current image
+
+        Returns:
+            A tuple containing the similarity judgment and the IoU score
+        """
+
+        user_prompt = """
+            You are an expert SVG optimization advisor. Compare the TARGET image with the CURRENT image and provide specific, actionable feedback for improving the current image to better match the target.
+
+            Focus on providing linguistic descriptions that can guide code-level optimizations:
+
+            VISUAL DISCREPANCIES:
+            Describe what you observe that differs between the images. Be specific about:
+            - Which shapes are incorrect, missing, or malformed
+            - Where elements are mispositioned (e.g., "the circle is 20px too far left")
+            - Color mismatches (e.g., "the rectangle should be #FF5733 instead of #FF0000")
+            - Size issues (e.g., "the text is approximately 30% too small")
+
+            GEOMETRIC ISSUES:
+            - Are curves and paths following the correct trajectories?
+            - Are angles and rotations accurate?
+            - Do proportional relationships between elements match?
+
+            STYLING PROBLEMS:
+            - Are stroke widths, dash patterns, or line caps correct?
+            - Do opacity levels and blending modes match?
+            - Are fonts, text sizes, and text positioning accurate?
+
+            LAYOUT AND COMPOSITION:
+            - How do element positions compare relatively?
+            - Are there alignment, spacing, or margin issues?
+            - Is the overall bounding box and canvas utilization correct?
+
+            OPTIMIZATION RECOMMENDATIONS:
+            Provide specific, implementable suggestions in natural language:
+            - "Move the blue rectangle 15px upward and 10px to the right"
+            - "Increase the stroke width of the border from 1px to 3px"
+            - "Change the circle's fill color from red to orange (#FF8C00)"
+            - "Rotate the arrow element 45 degrees clockwise"
+            - "Reduce the font size from 16px to 12px"
+
+            PRIORITY FIXES:
+            List the 3 most critical changes needed, in order of visual impact.
+
+            SEMANTIC UNDERSTANDING:
+            If the SVG represents something specific (icon, diagram, illustration), comment on whether the current version maintains the semantic meaning and visual intent of the target.
+
+            Respond in clear, direct language that a developer can immediately act upon to modify SVG code or generation parameters.
+            """
+        # Format the message for VLM call
+        messages = format_message(user_prompt=user_prompt)
+        
+        # Call VLM with both images (target first, then current)
+        response = call_vlm(
+            messages, 
+            image_paths=[target_image_path, current_image_path], 
+            model_name=self.model_name
+        )
+        
+        # Log the response
+        logging.info(f"VLM Judge Response: {response}")
+        
+        # Parse the linguistic judgment
+        linguistic_judgment = parse_answer(response)
+        
+        # Calculate IoU score separately using traditional computer vision
+        iou_score = compute_iou(current_image_path, target_image_path)
+        
+        return linguistic_judgment, iou_score
+
     def get_memory_summary(self) -> Dict[str, Any]:
         """Get a summary of the current memory state."""
         return {
