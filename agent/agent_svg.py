@@ -7,7 +7,7 @@ from .memory import Memory, State
 from .prompts_svg import LLM_grammar_sys, LLM_program_synthesis_prompt, LLM_CANDIDATE_GENERATION_PROMPT
 from .prompts import VLM_edits_sys, VLM_edits_user_2, VLM_scene_description_prompt, VLM_edits_with_feedback_prompt
 from .api_call_gpt import call_llm, call_vlm
-from .parser import parse_answer, parse_answer_json, format_message
+from .parser import parse_answer, parse_answer_json, format_message, parse_between_tags
 from .utils import compute_iou
 from render_svg import SVGAgent
 
@@ -239,82 +239,318 @@ class Agent:
         logging.info(f"🏆 Best candidate: {best_idx+1} with IoU {best_iou:.4f}")
         
         return best_candidate, candidate_ious, improvement_made
-    
-    def vlm_judge_similarity(self, target_image_path: str, current_image_path: str) -> Tuple[str, float]:
+
+    def vlm_judge_similarity(self, target_image_path: str, candidate_1_path: str, candidate_2_path: str) -> dict:
         """
-        Judge the similarity of the generated image with the target image.
+        Judge the similarity of two candidate images against a target image for tournament selection.
         
         Args:
-            target_image_path: Path to the target image
-            current_image_path: Path to the current image
+            target_image_path: Path to the ground truth target image
+            candidate_1_path: Path to the first candidate image
+            candidate_2_path: Path to the second candidate image
 
         Returns:
-            A tuple containing the similarity judgment and the IoU score
+            dict: {
+                'winner': str,  # Path to the winning candidate
+                'scores': dict,  # Individual scores for both candidates
+                'analysis': str,  # Detailed analysis text
+                'confidence': float  # Confidence in the decision (0-1)
+            }
         """
 
         user_prompt = """
-            You are an expert SVG optimization advisor. Compare the TARGET image with the CURRENT image and provide specific, actionable feedback for improving the current image to better match the target.
+            You are an expert visual similarity evaluator for SVG graphics conducting a tournament comparison. 
+            Compare the TARGET image with TWO candidate images to determine which candidate is more similar to the target.
 
-            Focus on providing linguistic descriptions that can guide code-level optimizations:
+            ==== IMAGES ====
+            - TARGET (Ground Truth): {target_image_path}
+            - CANDIDATE 1: {candidate_1_path}
+            - CANDIDATE 2: {candidate_2_path}
 
-            VISUAL DISCREPANCIES:
-            Describe what you observe that differs between the images. Be specific about:
-            - Which shapes are incorrect, missing, or malformed
-            - Where elements are mispositioned (e.g., "the circle is 20px too far left")
-            - Color mismatches (e.g., "the rectangle should be #FF5733 instead of #FF0000")
-            - Size issues (e.g., "the text is approximately 30% too small")
+            ==== EVALUATION PROCESS ====
 
-            GEOMETRIC ISSUES:
-            - Are curves and paths following the correct trajectories?
-            - Are angles and rotations accurate?
-            - Do proportional relationships between elements match?
+            First, describe each image focusing on:
+            - Shapes (types, counts, proportions)
+            - Colors (fills, strokes, gradients)
+            - Stroke properties (width, style, caps)
+            - Spatial layout (positions, alignment, spacing)
+            - Scale and sizing relationships
+            - Completeness (missing/extra elements)
 
-            STYLING PROBLEMS:
-            - Are stroke widths, dash patterns, or line caps correct?
-            - Do opacity levels and blending modes match?
-            - Are fonts, text sizes, and text positioning accurate?
+            Then evaluate BOTH candidates against the target using these criteria (0-10 scale):
 
-            LAYOUT AND COMPOSITION:
-            - How do element positions compare relatively?
-            - Are there alignment, spacing, or margin issues?
-            - Is the overall bounding box and canvas utilization correct?
+            **CANDIDATE 1 EVALUATION:**
+            1. Shape Accuracy: [score]/10 - [observations]
+            2. Color Fidelity: [score]/10 - [observations]
+            3. Stroke Properties: [score]/10 - [observations]
+            4. Spatial Layout: [score]/10 - [observations]
+            5. Size and Scale: [score]/10 - [observations]
+            6. Completeness: [score]/10 - [observations]
+            
+            CANDIDATE 1 OVERALL: [average]/10
 
-            OPTIMIZATION RECOMMENDATIONS:
-            Provide specific, implementable suggestions in natural language:
-            - "Move the blue rectangle 15px upward and 10px to the right"
-            - "Increase the stroke width of the border from 1px to 3px"
-            - "Change the circle's fill color from red to orange (#FF8C00)"
-            - "Rotate the arrow element 45 degrees clockwise"
-            - "Reduce the font size from 16px to 12px"
+            **CANDIDATE 2 EVALUATION:**
+            1. Shape Accuracy: [score]/10 - [observations]
+            2. Color Fidelity: [score]/10 - [observations]
+            3. Stroke Properties: [score]/10 - [observations]
+            4. Spatial Layout: [score]/10 - [observations]
+            5. Size and Scale: [score]/10 - [observations]
+            6. Completeness: [score]/10 - [observations]
+            
+            CANDIDATE 2 OVERALL: [average]/10
 
-            PRIORITY FIXES:
-            List the 3 most critical changes needed, in order of visual impact.
+            **TOURNAMENT DECISION:**
+            - Winner: CANDIDATE [1/2]
+            - Score Difference: [winner_score - loser_score]
+            - Confidence Level: [HIGH/MEDIUM/LOW] based on score difference
+            * HIGH: Difference ≥ 2.0 points
+            * MEDIUM: Difference 0.5-1.9 points  
+            * LOW: Difference < 0.5 points
 
-            SEMANTIC UNDERSTANDING:
-            If the SVG represents something specific (icon, diagram, illustration), comment on whether the current version maintains the semantic meaning and visual intent of the target.
+            **KEY DIFFERENTIATORS:**
+            - [List 2-3 main reasons why the winner is better]
+            - [Mention any close aspects where candidates were similar]
 
-            Respond in clear, direct language that a developer can immediately act upon to modify SVG code or generation parameters.
-            """
+            **WINNER CLASSIFICATION:**
+            - EXCELLENT: Overall score ≥ 9.0
+            - GOOD: Overall score 7.0-8.9
+            - ACCEPTABLE: Overall score 5.0-6.9
+            - POOR: Overall score < 5.0
+
+            RESPONSE FORMAT:
+            <answer>CANDIDATE_{{1 or 2}}</answer>
+            <candidate1_score>[numerical score]</candidate1_score>
+            <candidate2_score>[numerical score]</candidate2_score>
+            <confidence>[HIGH/MEDIUM/LOW]</confidence>
+            <explanation>[Complete analysis as structured above]</explanation>
+        """
+
         # Format the message for VLM call
-        messages = format_message(user_prompt=user_prompt)
+        messages = format_message(user_prompt=user_prompt.format(
+            target_image_path=target_image_path,
+            candidate_1_path=candidate_1_path,
+            candidate_2_path=candidate_2_path
+        ))
         
-        # Call VLM with both images (target first, then current)
+        # Call VLM with all three images (target first, then candidates)
         response = call_vlm(
             messages, 
-            image_paths=[target_image_path, current_image_path], 
+            image_paths=[target_image_path, candidate_1_path, candidate_2_path], 
             model_name=self.model_name
         )
         
         # Log the response
-        logging.info(f"VLM Judge Response: {response}")
+        logging.info(f"VLM Tournament Judge Response: {response}")
         
-        # Parse the linguistic judgment
-        linguistic_judgment = parse_answer(response)
+        try:
+            # Parse the structured response
+            winner_candidate = parse_answer(response)  # Should return "CANDIDATE_1" or "CANDIDATE_2"
+            candidate1_score = float(parse_between_tags(response, "candidate1_score"))
+            candidate2_score = float(parse_between_tags(response, "candidate2_score"))
+            confidence_level = parse_between_tags(response, "confidence")
+            analysis = parse_between_tags(response, "explanation")
+            
+            # Determine winner path and confidence score
+            if winner_candidate == "CANDIDATE_1":
+                winner_path = candidate_1_path
+            elif winner_candidate == "CANDIDATE_2":
+                winner_path = candidate_2_path
+            else:
+                # Fallback to score comparison
+                winner_path = candidate_1_path if candidate1_score >= candidate2_score else candidate_2_path
+            
+            # Convert confidence level to numerical score
+            confidence_map = {"HIGH": 0.9, "MEDIUM": 0.7, "LOW": 0.5}
+            confidence_score = confidence_map.get(confidence_level, 0.5)
+            
+            return {
+                'winner': winner_path,
+                'scores': {
+                    'candidate_1': candidate1_score,
+                    'candidate_2': candidate2_score
+                },
+                'analysis': analysis,
+                'confidence': confidence_score,
+                'score_difference': abs(candidate1_score - candidate2_score)
+            }
+            
+        except Exception as e:
+            logging.error(f"Error parsing VLM response: {e}")
+            # Fallback: return basic linguistic judgment
+            linguistic_judgment = parse_answer(response)
+            return {
+                'winner': candidate_1_path if "1" in linguistic_judgment else candidate_2_path,
+                'scores': {'candidate_1': 0.0, 'candidate_2': 0.0},
+                'analysis': response,
+                'confidence': 0.5,
+                'score_difference': 0.0
+            }
+
+
+    def run_tournament(self, target_image_path: str, candidate_paths: list, log_file_path: str = None) -> dict:
+        """
+        Run a tournament-style comparison to find the best candidate image.
         
-        # Calculate IoU score separately using traditional computer vision
-        iou_score = compute_iou(current_image_path, target_image_path)
+        Args:
+            target_image_path: Path to the ground truth target image
+            candidate_paths: List of paths to candidate images
+            log_file_path: Optional path to save detailed tournament log (default: auto-generated)
         
-        return linguistic_judgment, iou_score
+        Returns:
+            dict: Tournament results with winner, all scores, and tournament bracket
+        """
+        if len(candidate_paths) < 2:
+            raise ValueError("Tournament requires at least 2 candidates")
+        
+        import math
+        import os
+        from datetime import datetime
+        
+        # Generate log file path if not provided
+        if log_file_path is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_file_path = f"tournament_log_{timestamp}.txt"
+        
+        # Initialize detailed logging
+        detailed_log = []
+        tournament_log = []
+        current_round = candidate_paths.copy()
+        round_number = 1
+        
+        # Start tournament log
+        log_header = f"""
+    {'='*80}
+    VLM TOURNAMENT LOG
+    {'='*80}
+    Target Image: {target_image_path}
+    Total Candidates: {len(candidate_paths)}
+    Tournament Start Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+    Model: {self.model_name}
+    {'='*80}
+
+    CANDIDATE LIST:
+    """
+        for i, path in enumerate(candidate_paths, 1):
+            log_header += f"{i:2d}. {path}\n"
+        
+        log_header += f"\n{'='*80}\n"
+        detailed_log.append(log_header)
+        
+        while len(current_round) > 1:
+            next_round = []
+            round_log = []
+            
+            round_header = f"\nROUND {round_number} - {len(current_round)} candidates\n{'-'*50}\n"
+            detailed_log.append(round_header)
+            logging.info(f"Tournament Round {round_number}: {len(current_round)} candidates")
+            
+            match_number = 1
+            
+            # Pair up candidates for this round
+            for i in range(0, len(current_round), 2):
+                if i + 1 < len(current_round):
+                    # Normal pairing
+                    candidate_1 = current_round[i]
+                    candidate_2 = current_round[i + 1]
+                    
+                    match_header = f"\nMATCH {match_number} (Round {round_number}):\n"
+                    match_header += f"Candidate 1: {os.path.basename(candidate_1)}\n"
+                    match_header += f"Candidate 2: {os.path.basename(candidate_2)}\n"
+                    match_header += f"Target: {os.path.basename(target_image_path)}\n"
+                    match_header += "-" * 40 + "\n"
+                    detailed_log.append(match_header)
+                    
+                    # Judge the match
+                    result = self.vlm_judge_similarity(target_image_path, candidate_1, candidate_2)
+                    
+                    winner = result['winner']
+                    next_round.append(winner)
+                    
+                    # Log match results
+                    match_result = f"WINNER: {os.path.basename(winner)}\n"
+                    match_result += f"Candidate 1 Score: {result['scores']['candidate_1']:.2f}\n"
+                    match_result += f"Candidate 2 Score: {result['scores']['candidate_2']:.2f}\n"
+                    match_result += f"Score Difference: {result['score_difference']:.2f}\n"
+                    match_result += f"Confidence: {result['confidence']:.2f}\n\n"
+                    match_result += "VLM DETAILED ANALYSIS:\n"
+                    match_result += result['analysis'] + "\n"
+                    match_result += "=" * 60 + "\n"
+                    detailed_log.append(match_result)
+                    
+                    match_info = {
+                        'match_number': match_number,
+                        'candidate_1': candidate_1,
+                        'candidate_2': candidate_2,
+                        'winner': winner,
+                        'scores': result['scores'],
+                        'confidence': result['confidence'],
+                        'score_difference': result['score_difference'],
+                        'vlm_analysis': result['analysis']
+                    }
+                    round_log.append(match_info)
+                    
+                    logging.info(f"Match {match_number}: {os.path.basename(candidate_1)} vs {os.path.basename(candidate_2)} -> Winner: {os.path.basename(winner)}")
+                    match_number += 1
+                    
+                else:
+                    # Odd number of candidates, this one advances automatically
+                    bye_info = f"\nBYE: {os.path.basename(current_round[i])} advances automatically\n" + "=" * 40 + "\n"
+                    detailed_log.append(bye_info)
+                    next_round.append(current_round[i])
+                    logging.info(f"Bye: {current_round[i]} advances automatically")
+            
+            tournament_log.append({
+                'round': round_number,
+                'matches': round_log
+            })
+            
+            current_round = next_round
+            round_number += 1
+        
+        # Get final evaluation of the winner
+        final_winner = current_round[0]
+        
+        # Log final results
+        final_header = f"\n{'='*80}\nFINAL RESULTS\n{'='*80}\n"
+        final_header += f"TOURNAMENT CHAMPION: {os.path.basename(final_winner)}\n"
+        final_header += f"Total Rounds: {round_number - 1}\n"
+        final_header += f"Tournament End Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        final_header += "=" * 80 + "\n"
+        detailed_log.append(final_header)
+        
+        # Perform final evaluation against target
+        if len(candidate_paths) > 1:  # Only do final evaluation if there was actual competition
+            final_eval_header = "\nFINAL CHAMPION EVALUATION vs TARGET:\n" + "-" * 50 + "\n"
+            detailed_log.append(final_eval_header)
+            
+            # Create a dummy comparison (champion vs itself) to get detailed analysis
+            final_evaluation = self.vlm_judge_similarity(target_image_path, final_winner, final_winner)
+            
+            final_eval_result = f"Champion: {os.path.basename(final_winner)}\n"
+            final_eval_result += f"Final Score: {final_evaluation['scores']['candidate_1']:.2f}/10\n\n"
+            final_eval_result += "FINAL DETAILED ANALYSIS:\n"
+            final_eval_result += final_evaluation['analysis'] + "\n"
+            detailed_log.append(final_eval_result)
+        else:
+            final_evaluation = {'scores': {'candidate_1': 0.0}, 'analysis': 'Single candidate tournament'}
+        
+        # Write complete log to file
+        try:
+            with open(log_file_path, 'w', encoding='utf-8') as f:
+                f.write(''.join(detailed_log))
+            logging.info(f"Tournament log saved to: {log_file_path}")
+        except Exception as e:
+            logging.error(f"Failed to save tournament log: {e}")
+        
+        return {
+            'champion': final_winner,
+            'tournament_log': tournament_log,
+            'total_rounds': round_number - 1,
+            'total_candidates': len(candidate_paths),
+            'final_evaluation': final_evaluation,
+            'log_file_path': log_file_path,
+            'detailed_log': ''.join(detailed_log)  # Include in return for immediate access
+        }
 
     def get_memory_summary(self) -> Dict[str, Any]:
         """Get a summary of the current memory state."""

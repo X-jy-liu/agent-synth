@@ -1,5 +1,6 @@
 import re
 import json
+import logging
 
 
 def parse_answer(response: str):
@@ -55,6 +56,38 @@ def format_message(sys_prompt=None, user_prompt=None):
         message.append({"role": "user", "content": user_prompt})
         
     return message
+
+def parse_between_tags(text: str, tag_name: str, default: str = "") -> str:
+    """
+    Extract content between XML-style tags from text.
+    
+    Args:
+        text: The text to search in
+        tag_name: The name of the tag (without < >)
+        default: Default value to return if tag not found
+    
+    Returns:
+        str: Content between the tags, or default if not found
+    """
+    try:
+        # Create pattern for both self-closing and regular tags
+        pattern = f'<{tag_name}[^>]*>(.*?)</{tag_name}>'
+        match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+        
+        if match:
+            content = match.group(1).strip()
+            return content
+        
+        # Try self-closing tag pattern as fallback
+        self_closing_pattern = f'<{tag_name}[^>]*/>'
+        if re.search(self_closing_pattern, text, re.IGNORECASE):
+            return ""  # Empty content for self-closing tags
+            
+        return default
+        
+    except Exception as e:
+        logging.warning(f"Error parsing tag '{tag_name}': {e}")
+        return default
 
 
 if __name__ == "__main__":

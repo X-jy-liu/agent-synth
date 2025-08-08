@@ -1,0 +1,411 @@
+
+    ================================================================================
+    VLM TOURNAMENT LOG
+    ================================================================================
+    Target Image: /home/jingyang/agent-synth/data/render_svg_mutator/base_scene.png
+    Total Candidates: 6
+    Tournament Start Time: 2025-08-08 22:42:03
+    Model: o3
+    ================================================================================
+
+    CANDIDATE LIST:
+     1. /home/jingyang/agent-synth/data/render_svg_mutator/fine_control_0.02.png
+ 2. /home/jingyang/agent-synth/data/render_svg_mutator/fine_control_0.15.png
+ 3. /home/jingyang/agent-synth/data/render_svg_mutator/fine_control_0.33.png
+ 4. /home/jingyang/agent-synth/data/render_svg_mutator/fine_control_0.67.png
+ 5. /home/jingyang/agent-synth/data/render_svg_mutator/fine_control_0.85.png
+ 6. /home/jingyang/agent-synth/data/render_svg_mutator/fine_control_0.95.png
+
+================================================================================
+
+ROUND 1 - 6 candidates
+--------------------------------------------------
+
+MATCH 1 (Round 1):
+Candidate 1: fine_control_0.02.png
+Candidate 2: fine_control_0.15.png
+Target: base_scene.png
+----------------------------------------
+WINNER: fine_control_0.02.png
+Candidate 1 Score: 9.30
+Candidate 2 Score: 8.50
+Score Difference: 0.80
+Confidence: 0.70
+
+VLM DETAILED ANALYSIS:
+GENERAL DESCRIPTION  
+Target – White canvas with four objects:  
+• Purple circle (black stroke) in the upper-left quadrant.  
+• Orange diamond (square rotated 45°, thin blue stroke) in upper-right.  
+• Pink tilted ellipse (red stroke) in lower-left.  
+• Green axis-aligned square (black stroke) in lower-right.  
+All strokes look ~6 px except the diamond (~4 px). Objects are of comparable visual size and well separated.
+
+---------------------------------
+CANDIDATE 1 ANALYSIS  
+The rendered scene visually matches the target almost exactly.  
+1. Shape Accuracy: 9/10 – All four correct shapes, correct rotation of diamond and ellipse; edges crisp. Minor pixel-level deviation on ellipse curvature.  
+2. Color Fidelity: 10/10 – Fills and stroke colours indistinguishable from target.  
+3. Stroke Properties: 9/10 – Widths and colours match; tiny (<1 px) variance on blue stroke thickness.  
+4. Spatial Layout: 9/10 – Centres of shapes within a few pixels of target; relative spacing preserved.  
+5. Size and Scale: 9/10 – Diameters/edge lengths same; microscopic difference on circle radius.  
+6. Completeness: 10/10 – Nothing missing or extra.  
+
+CANDIDATE 1 OVERALL: 9.3/10
+
+---------------------------------
+CANDIDATE 2 ANALYSIS  
+Looks very similar, but each object is shifted a little farther from its target positions and some sizes differ slightly.  
+1. Shape Accuracy: 8/10 – Correct types/rotations, but diamond appears marginally smaller and ellipse bounding box slightly wider.  
+2. Color Fidelity: 10/10 – Colours match perfectly.  
+3. Stroke Properties: 9/10 – Stroke colours correct; widths essentially correct, slight thinning on diamond.  
+4. Spatial Layout: 7/10 – Circle is a few pixels higher and further left; diamond a bit lower/right; square slightly lower; overall alignment drift noticeable when toggling.  
+5. Size and Scale: 7/10 – Diamond side and square edge a bit shorter than target; ellipse minor scaling.  
+6. Completeness: 10/10 – All four shapes present, no extras.
+
+CANDIDATE 2 OVERALL: 8.5/10
+
+---------------------------------
+TOURNAMENT DECISION  
+Winner: CANDIDATE 1  
+Score Difference: 0.8  
+Confidence Level: MEDIUM  
+
+KEY DIFFERENTIATORS  
+• More precise placement of every shape (especially circle and square).  
+• Closer match on object dimensions (diamond and square sizes).  
+Close aspects: Both candidates have perfect colours and nearly identical strokes; neither is missing any element.
+
+WINNER CLASSIFICATION: GOOD (overall ≥ 7 and < 9 for candidate 2; candidate 1 > 9 = excellent match)
+============================================================
+
+MATCH 2 (Round 1):
+Candidate 1: fine_control_0.33.png
+Candidate 2: fine_control_0.67.png
+Target: base_scene.png
+----------------------------------------
+WINNER: fine_control_0.33.png
+Candidate 1 Score: 8.30
+Candidate 2 Score: 3.50
+Score Difference: 4.80
+Confidence: 0.90
+
+VLM DETAILED ANALYSIS:
+TARGET IMAGE DESCRIPTION
+• 4 distinct shapes:
+  – Purple filled circle with black stroke, upper-left quadrant  
+  – Orange square rotated 45° (diamond) with thin blue stroke, upper-right quadrant  
+  – Light-pink filled ellipse with thick red stroke, lower-left quadrant, tilted ≈30°  
+  – Green filled axis-aligned square with black stroke, lower-right quadrant  
+• All strokes uniform solid lines.  
+• Moderate spacing; none touch the canvas edge.
+
+CANDIDATE 1 DESCRIPTION (fine_control_0.33.png)
+• Same four shapes: purple circle, orange diamond, pink tilted ellipse, green square.  
+• Sizes, fills, and stroke colours visually identical to the target.  
+• Whole composition is translated down-right a little: the diamond is very close to / slightly clipped by the top-right corner; green square is a bit higher; circle & ellipse shifted right.  
+• No extra or missing elements.
+
+CANDIDATE 2 DESCRIPTION (fine_control_0.67.png)
+• Shapes present but heavily altered:  
+  – Diamond location replaced by a much larger, pale-pink rotated rectangle (wrong size, wrong fill).  
+  – Purple circle moved to centre-bottom area.  
+  – Pink ellipse bigger and left-side vertical.  
+  – Green square shrunk and rotated 45° (now a small green diamond) near bottom-centre.  
+• Colours wrong for multiple shapes; major scaling differences.
+
+================================================
+CANDIDATE 1 EVALUATION
+1. Shape Accuracy: 8/10 – Correct shape types and counts; minor clipping of diamond.  
+2. Color Fidelity: 9/10 – All fills and stroke colours match.  
+3. Stroke Properties: 9/10 – Stroke colours/widths look correct.  
+4. Spatial Layout: 6/10 – Consistent relative order but global shift; diamond touches edge.  
+5. Size and Scale: 9/10 – Shape dimensions match target.  
+6. Completeness: 9/10 – No missing/extra items; small edge clip only.
+
+CANDIDATE 1 OVERALL: 8.3/10
+
+CANDIDATE 2 EVALUATION
+1. Shape Accuracy: 3/10 – Rectangle instead of diamond, square rotated and resized.  
+2. Color Fidelity: 3/10 – Large rectangle wrongly coloured pink, other fills correct.  
+3. Stroke Properties: 6/10 – Strokes mostly correct colours but widths vary.  
+4. Spatial Layout: 2/10 – All elements relocated; large rectangle dominates centre.  
+5. Size and Scale: 3/10 – Major size mismatches (oversized rectangle, undersized square).  
+6. Completeness: 4/10 – All four items exist but many incorrect attributes.
+
+CANDIDATE 2 OVERALL: 3.5/10
+
+================================================
+TOURNAMENT DECISION
+Winner: CANDIDATE 1  
+Score Difference: 4.8  
+Confidence Level: HIGH
+
+KEY DIFFERENTIATORS
+• Candidate 1 keeps the correct four shapes with right sizes, colours, and strokes, only slightly misplaced; Candidate 2 changes shape geometry, colours, sizes, and layout drastically.  
+• Candidate 1’s only notable issue is a small translational shift causing slight clipping, whereas Candidate 2 exhibits multiple fundamental errors.
+
+Close aspects: Both candidates use proper stroke colours on most shapes.
+
+WINNER CLASSIFICATION: GOOD (overall ≥7.0 and <9.0)
+============================================================
+
+MATCH 3 (Round 1):
+Candidate 1: fine_control_0.85.png
+Candidate 2: fine_control_0.95.png
+Target: base_scene.png
+----------------------------------------
+WINNER: fine_control_0.85.png
+Candidate 1 Score: 3.20
+Candidate 2 Score: 1.30
+Score Difference: 1.90
+Confidence: 0.90
+
+VLM DETAILED ANALYSIS:
+REFERENCE DESCRIPTION  
+Target contains exactly 4 objects on white:  
+1. Circle, upper-left, purple fill, thick black stroke.  
+2. Diamond (square 45°), upper-right, orange fill, thin blue stroke.  
+3. Small, tilted ellipse, lower-left, light-pink fill, red stroke.  
+4. Axis-aligned square, lower-right, green fill, black stroke.  
+All strokes solid, few pixels wide. Large empty white area between shapes.
+
+-------------------------------------------------
+CANDIDATE-1 DESCRIPTION  
+• Large magenta ellipse near upper-centre with thin blue stroke.  
+• Small orange diamond near extreme upper-left with thin yellow stroke.  
+• Large green circle bottom-left with thick black stroke.  
+• Tiny magenta diamond bottom-right with red stroke.  
+No axis-aligned square. Four shapes total.
+
+CANDIDATE-2 DESCRIPTION  
+• Very large red horizontal ellipse top-right with bright green stroke.  
+• Small teal diamond near top-centre with purple stroke.  
+• Medium red vertical ellipse mid-left, thin green stroke.  
+• Large purple diamond lower-left with red stroke.  
+• Tiny cyan circle with pink stroke bottom-centre.  
+Five shapes; none occupy correct positions, colours, or sizes.
+
+-------------------------------------------------
+EVALUATION  
+
+CANDIDATE 1  
+1. Shape Accuracy: 3/10 – Has circle, ellipse, two diamonds; misses square, mis-sizes.  
+2. Color Fidelity: 3/10 – Only the green circle stroke colour roughly matches a target element; other fills/strokes off.  
+3. Stroke Properties: 4/10 – Uses thick black stroke on circle and thin coloured strokes elsewhere; partially similar.  
+4. Spatial Layout: 3/10 – Correct number of items but all in wrong quadrants.  
+5. Size & Scale: 3/10 – Relative sizes incorrect; ellipse too big, diamond too small.  
+6. Completeness: 3/10 – Missing square, extra diamond; otherwise correct count.  
+CANDIDATE 1 OVERALL: 3.2/10
+
+CANDIDATE 2  
+1. Shape Accuracy: 1/10 – Adds extra circle, lacks square; only diamond & ellipse vaguely match.  
+2. Color Fidelity: 1/10 – No fill/stroke colours match the target palette.  
+3. Stroke Properties: 2/10 – Mixed stroke widths/colours, little correspondence.  
+4. Spatial Layout: 1/10 – No element in a correct quadrant.  
+5. Size & Scale: 1/10 – All sizes very different; massive ellipse, tiny circle.  
+6. Completeness: 1/10 – Extra shapes, missing square, wrong counts.  
+CANDIDATE 2 OVERALL: 1.3/10
+
+-------------------------------------------------
+TOURNAMENT DECISION  
+Winner: CANDIDATE 1  
+Score Difference: 1.9  
+Confidence Level: HIGH
+
+KEY DIFFERENTIATORS  
+• Candidate 1 at least uses a purple-family fill with blue stroke on an ellipse and a black-stroked green circle, partially echoing target stroke treatment, whereas Candidate 2’s colours are entirely off.  
+• Candidate 1 keeps the object count to four (same as target) while Candidate 2 adds a fifth object and still omits the required square.  
+Similarities: Both miss the green square and mis-place every element.
+
+WINNER CLASSIFICATION: POOR (overall score < 5)
+============================================================
+
+ROUND 2 - 3 candidates
+--------------------------------------------------
+
+MATCH 1 (Round 2):
+Candidate 1: fine_control_0.02.png
+Candidate 2: fine_control_0.33.png
+Target: base_scene.png
+----------------------------------------
+WINNER: fine_control_0.02.png
+Candidate 1 Score: 9.80
+Candidate 2 Score: 6.80
+Score Difference: 3.00
+Confidence: 0.90
+
+VLM DETAILED ANALYSIS:
+IMAGE DESCRIPTIONS
+Target: White canvas with four distinct shapes.
+ • Purple filled circle with black stroke, upper-left quadrant.
+ • Orange square rotated 45° (diamond) outlined in blue, upper-right quadrant.
+ • Light-pink tilted ellipse with red stroke, lower-left quadrant.
+ • Green filled square with black stroke, lower-right quadrant.
+Strokes are crisp (≈4 px), fills solid, shapes evenly spaced; none touch the edges.
+
+Candidate 1: Visually indistinguishable from target. All four shapes, colors, strokes and positions match.
+
+Candidate 2: Same four shapes, colors and stroke styles, but the whole composition is shifted down-right. Diamond is pushed into the extreme top-right corner and partly cropped; circle hugs left margin; other shapes also drift.
+
+CANDIDATE 1 EVALUATION
+1. Shape Accuracy: 10/10 – All four shapes present with correct geometry.
+2. Color Fidelity: 10/10 – Fills and stroke colors perfectly reproduced.
+3. Stroke Properties: 10/10 – Correct color, width and joins.
+4. Spatial Layout: 10/10 – Positions mirror the target precisely.
+5. Size and Scale: 10/10 – All dimensions match.
+6. Completeness: 9/10 – Virtually perfect; no omissions or extras.
+CANDIDATE 1 OVERALL: 9.8/10
+
+CANDIDATE 2 EVALUATION
+1. Shape Accuracy: 9/10 – Shapes themselves correct, diamond slightly cropped.
+2. Color Fidelity: 10/10 – Colors match.
+3. Stroke Properties: 10/10 – Stroke widths and colors accurate.
+4. Spatial Layout: 3/10 – Whole scene shifted; diamond touches/crosses edge, circle pressed left.
+5. Size and Scale: 8/10 – Sizes mostly correct, but diamond appears marginally larger due to cropping impression.
+6. Completeness: 7/10 – All elements present yet diamond not fully visible.
+CANDIDATE 2 OVERALL: 6.8/10
+
+TOURNAMENT DECISION
+Winner: CANDIDATE 1  
+Score Difference: 3.0  
+Confidence Level: HIGH  
+
+KEY DIFFERENTIATORS
+• Candidate 1 maintains exact placement; Candidate 2’s translation causes mis-alignment and cropping.  
+• Candidate 1 preserves full visibility of every shape; Candidate 2 loses part of the diamond.  
+Close aspect: Both reproduce shapes, colors and stroke styles accurately.
+
+WINNER CLASSIFICATION
+GOOD (score 7.0-8.9) – Candidate 1 actually nears excellent at 9.8.
+============================================================
+
+BYE: fine_control_0.85.png advances automatically
+========================================
+
+ROUND 3 - 2 candidates
+--------------------------------------------------
+
+MATCH 1 (Round 3):
+Candidate 1: fine_control_0.02.png
+Candidate 2: fine_control_0.85.png
+Target: base_scene.png
+----------------------------------------
+WINNER: fine_control_0.02.png
+Candidate 1 Score: 9.20
+Candidate 2 Score: 2.70
+Score Difference: 6.50
+Confidence: 0.90
+
+VLM DETAILED ANALYSIS:
+REFERENCE DESCRIPTION  
+Target image contains exactly four objects on a white canvas:  
+1. A medium-sized purple circle with a thick black stroke in the upper-left quadrant.  
+2. A medium orange diamond (square rotated 45°) outlined in blue, upper-right quadrant.  
+3. A small tilted pink ellipse with a red outline, lower-left quadrant.  
+4. A medium green square with a black outline, lower-right quadrant.  
+All strokes are solid, uniform width (≈5-6 px). Objects are well separated and roughly centred in their quadrants. No extra elements.
+
+-------------------------------------------------
+CANDIDATE 1 DESCRIPTION  
+Looks visually identical to the target: same four shapes, same colours, same stroke colours/widths, same tilt of ellipse and diamond, same quadrant placement and sizes.
+
+CANDIDATE 2 DESCRIPTION  
+Different picture:  
+• Large magenta ellipse with blue outline in upper-middle/right area.  
+• Very small yellow diamond with yellow outline in extreme top-left corner.  
+• Large dark-green circle (not square) with black outline in lower-left.  
+• Very small magenta square with red outline in lower-right corner.  
+Colours, shapes, sizes and positions differ greatly from the target.
+
+-------------------------------------------------
+CANDIDATE 1 EVALUATION
+1. Shape Accuracy: 9/10 – All four shapes match. Minor, barely perceptible pixel drift only.  
+2. Color Fidelity: 9/10 – Fills and stroke colours visually identical.  
+3. Stroke Properties: 9/10 – Stroke colours and thickness match; indistinguishable from target.  
+4. Spatial Layout: 9/10 – Objects occupy the same quadrants with negligible shift.  
+5. Size and Scale: 9/10 – Relative and absolute sizes appear the same.  
+6. Completeness: 10/10 – Nothing missing or extra.  
+CANDIDATE 1 OVERALL: 9.2/10
+
+CANDIDATE 2 EVALUATION
+1. Shape Accuracy: 2/10 – Circle replaced by ellipse, square replaced by circle, diamond size off, etc.  
+2. Color Fidelity: 2/10 – Purple → magenta, pink ellipse missing, wrong colours for strokes on two shapes.  
+3. Stroke Properties: 4/10 – Some strokes present, but colours/thicknesses wrong on several shapes.  
+4. Spatial Layout: 3/10 – Only two objects roughly in correct quadrant; others far off.  
+5. Size and Scale: 2/10 – Huge ellipse, tiny diamond & square; proportions wrong.  
+6. Completeness: 3/10 – Four objects exist but none correspond properly to the required set.  
+CANDIDATE 2 OVERALL: 2.7/10
+
+-------------------------------------------------
+TOURNAMENT DECISION  
+Winner: CANDIDATE 1  
+Score Difference: 6.5  
+Confidence Level: HIGH
+
+KEY DIFFERENTIATORS  
+• Candidate 1 reproduces the exact shapes, colours and layout, while Candidate 2 changes almost everything.  
+• Candidate 1 keeps stroke colours/thickness correct; Candidate 2 does not.  
+Close aspect: both have four discrete objects on a white background, but similarity ends there.
+
+WINNER CLASSIFICATION: EXCELLENT (≥9.0)
+============================================================
+
+================================================================================
+FINAL RESULTS
+================================================================================
+TOURNAMENT CHAMPION: fine_control_0.02.png
+Total Rounds: 3
+Tournament End Time: 2025-08-08 22:43:56
+================================================================================
+
+FINAL CHAMPION EVALUATION vs TARGET:
+--------------------------------------------------
+Champion: fine_control_0.02.png
+Final Score: 9.80/10
+
+FINAL DETAILED ANALYSIS:
+IMAGE DESCRIPTIONS
+Target:
+• Four distinct shapes on white canvas.
+  – Top-left: solid purple circle with thick black outline.
+  – Top-right: orange rectangle rotated 45 ° (appears as diamond) outlined in thin blue.
+  – Bottom-left: light-pink ellipse tilted about 30 ° with medium red outline.
+  – Bottom-right: green square, upright, thick black outline.
+• Shapes are well separated: circle roughly (20 %, 20 %), diamond (70 %, 20 %), ellipse (25 %, 75 %), square (70 %, 75 %).
+• Sizes: circle ≈ square ≈ 1⁄6 canvas width; ellipse slightly smaller; diamond similar to square but longer on diagonal.
+• No extra elements.
+
+Candidate 1:
+Visually matches every detail above: same shapes, fill/stroke colours, rotation angles, stroke thicknesses, and positions (if any shift it is imperceptible).
+
+Candidate 2:
+Exact same raster file as Candidate 1, hence the same observations.
+
+EVALUATIONS
+Because both candidates appear indistinguishable from the target, they receive equal very high marks.
+
+CANDIDATE 1
+1. Shape Accuracy: 10/10 – All four shapes present with correct forms and rotations.
+2. Color Fidelity: 10/10 – Fills and stroke colours identical.
+3. Stroke Properties: 10/10 – Thickness and colours precisely reproduced.
+4. Spatial Layout: 9/10 – If any, only sub-pixel differences; visually coincident.
+5. Size and Scale: 10/10 – Proportions identical.
+6. Completeness: 9/10 – No missing/extra items; near-perfect.
+
+Overall: 9.8/10
+
+CANDIDATE 2
+(Same scores and remarks.)
+Overall: 9.8/10
+
+TOURNAMENT DECISION
+Winner: CANDIDATE 1
+Score Difference: 0.0
+Confidence Level: LOW
+
+KEY DIFFERENTIATORS
+• Images are identical; tie broken arbitrarily in favour of Candidate 1.
+• All evaluated aspects were equivalent.
+
+WINNER CLASSIFICATION: EXCELLENT (≥ 9.0)
