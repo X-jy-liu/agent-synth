@@ -1,0 +1,62 @@
+[
+  {
+    "shape_type": "ellipse",
+    "x": 79,
+    "y": 144,
+    "scale_x": 45,
+    "scale_y": 57,
+    "fill_color": "orange",
+    "stroke_color": "black",
+    "stroke_width": 2,
+    "rotation": 52,
+    "opacity": 1.0
+  },
+  {
+    "shape_type": "rectangle",
+    "x": 50,
+    "y": 50,
+    "scale_x": 28,
+    "scale_y": 20,
+    "fill_color": "black",
+    "stroke_color": "black",
+    "stroke_width": 2,
+    "rotation": 190,
+    "opacity": 1.0
+  },
+  {
+    "shape_type": "ellipse",
+    "x": 427,
+    "y": 77,
+    "scale_x": 113,
+    "scale_y": 68,
+    "fill_color": "lime",
+    "stroke_color": "red",
+    "stroke_width": 2,
+    "rotation": 11,
+    "opacity": 1.0
+  },
+  {
+    "shape_type": "rectangle",
+    "x": 50,
+    "y": 550,
+    "scale_x": 41,
+    "scale_y": 33,
+    "fill_color": "lime",
+    "stroke_color": "orange",
+    "stroke_width": 2,
+    "rotation": 276,
+    "opacity": 1.0
+  },
+  {
+    "shape_type": "ellipse",
+    "x": 492,
+    "y": 50,
+    "scale_x": 88,
+    "scale_y": 108,
+    "fill_color": "blue",
+    "stroke_color": "black",
+    "stroke_width": 2,
+    "rotation": 13,
+    "opacity": 1.0
+  }
+]

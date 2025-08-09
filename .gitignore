@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
-data/
+data/benchmark/
+data/tinysvg/
+data/random_program_generator.py
