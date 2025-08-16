@@ -6,7 +6,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from .memory import Memory, State
 from .prompts_svg import LLM_grammar_sys, LLM_program_synthesis_prompt, LLM_CANDIDATE_GENERATION_PROMPT
 from .prompts import VLM_edits_sys, VLM_edits_user_2, VLM_scene_description_prompt, VLM_edits_with_feedback_prompt
-from .api_call_gpt import call_llm, call_vlm
+# from .api_call_gpt import call_llm, call_vlm
+from .api_call_gemini import call_llm, call_vlm
 from .parser import parse_answer, parse_answer_json, format_message, parse_between_tags
 from .utils import compute_iou
 from render_svg import SVGAgent
@@ -551,6 +552,270 @@ class Agent:
             'log_file_path': log_file_path,
             'detailed_log': ''.join(detailed_log)  # Include in return for immediate access
         }
+    
+    # define a selection method to select the most similar candidate image to the target.
+    def vlm_judge_best_candidate(self, target_image_path: str, candidate_paths: List[str]) -> dict:
+        """
+        Judge 5 candidate images against a target image and select the best one based on content similarity.
+        
+        Args:
+            target_image_path: Path to the ground truth target image
+            candidate_paths: List of paths to candidate images (expects 5 candidates)
+
+        Returns:
+            dict: {
+                'best_candidate': str,  # Path to the best candidate
+                'all_scores': List[float],  # Scores for all candidates in order
+                'rankings': List[int],  # Ranking positions (1=best, 5=worst)
+                'analysis': str,  # Detailed analysis text
+                'confidence': float,  # Confidence in the decision (0-1)
+                'score_difference': float  # Difference between best and second-best
+            }
+        """
+        
+        if len(candidate_paths) != 5:
+            raise ValueError(f"Expected exactly 5 candidates, got {len(candidate_paths)}")
+
+        user_prompt = """
+            You are an expert visual similarity evaluator for SVG graphics. Your task is to compare a TARGET image 
+            with FIVE candidate images and determine which candidate is most similar to the target.
+
+            ==== IMAGES ====
+            - TARGET (Ground Truth): Image 1
+            - CANDIDATE A: Image 2  
+            - CANDIDATE B: Image 3
+            - CANDIDATE C: Image 4
+            - CANDIDATE D: Image 5
+            - CANDIDATE E: Image 6
+
+            ==== EVALUATION PROCESS ====
+
+            First, describe the TARGET image in detail, focusing on:
+            - Shapes (types, counts, proportions, complexity)
+            - Colors (fills, strokes, gradients, color palette)
+            - Stroke properties (width, style, caps, joins)
+            - Spatial layout (positions, alignment, spacing, composition)
+            - Scale and sizing relationships
+            - Overall visual style and completeness
+
+            Then evaluate EACH candidate against the target using these criteria (0-10 scale):
+
+            **CANDIDATE A EVALUATION:**
+            1. Shape Accuracy: [score]/10 - [detailed observations]
+            2. Color Fidelity: [score]/10 - [detailed observations]  
+            3. Stroke Properties: [score]/10 - [detailed observations]
+            4. Spatial Layout: [score]/10 - [detailed observations]
+            5. Size and Scale: [score]/10 - [detailed observations]
+            6. Completeness: [score]/10 - [detailed observations]
+            
+            CANDIDATE A OVERALL: [average]/10
+
+            **CANDIDATE B EVALUATION:**
+            1. Shape Accuracy: [score]/10 - [detailed observations]
+            2. Color Fidelity: [score]/10 - [detailed observations]
+            3. Stroke Properties: [score]/10 - [detailed observations]
+            4. Spatial Layout: [score]/10 - [detailed observations]
+            5. Size and Scale: [score]/10 - [detailed observations]
+            6. Completeness: [score]/10 - [detailed observations]
+            
+            CANDIDATE B OVERALL: [average]/10
+
+            **CANDIDATE C EVALUATION:**
+            1. Shape Accuracy: [score]/10 - [detailed observations]
+            2. Color Fidelity: [score]/10 - [detailed observations]
+            3. Stroke Properties: [score]/10 - [detailed observations]
+            4. Spatial Layout: [score]/10 - [detailed observations]
+            5. Size and Scale: [score]/10 - [detailed observations]
+            6. Completeness: [score]/10 - [detailed observations]
+            
+            CANDIDATE C OVERALL: [average]/10
+
+            **CANDIDATE D EVALUATION:**
+            1. Shape Accuracy: [score]/10 - [detailed observations]
+            2. Color Fidelity: [score]/10 - [detailed observations]
+            3. Stroke Properties: [score]/10 - [detailed observations]
+            4. Spatial Layout: [score]/10 - [detailed observations]
+            5. Size and Scale: [score]/10 - [detailed observations]
+            6. Completeness: [score]/10 - [detailed observations]
+            
+            CANDIDATE D OVERALL: [average]/10
+
+            **CANDIDATE E EVALUATION:**
+            1. Shape Accuracy: [score]/10 - [detailed observations]
+            2. Color Fidelity: [score]/10 - [detailed observations]
+            3. Stroke Properties: [score]/10 - [detailed observations]
+            4. Spatial Layout: [score]/10 - [detailed observations]
+            5. Size and Scale: [score]/10 - [detailed observations]
+            6. Completeness: [score]/10 - [detailed observations]
+            
+            CANDIDATE E OVERALL: [average]/10
+
+            **FINAL RANKING AND SELECTION:**
+            
+            Rank all candidates from best to worst:
+            1. CANDIDATE [A/B/C/D/E] - [score]/10
+            2. CANDIDATE [A/B/C/D/E] - [score]/10  
+            3. CANDIDATE [A/B/C/D/E] - [score]/10
+            4. CANDIDATE [A/B/C/D/E] - [score]/10
+            5. CANDIDATE [A/B/C/D/E] - [score]/10
+
+            **BEST CANDIDATE SELECTION:**
+            - Winner: CANDIDATE [A/B/C/D/E]
+            - Best Score: [score]/10
+            - Score Difference from Second Place: [difference]
+            - Confidence Level: [HIGH/MEDIUM/LOW] based on score difference and absolute score
+            * HIGH: Best score ≥ 8.0 AND difference ≥ 1.5 points
+            * MEDIUM: Best score ≥ 6.0 OR difference 0.8-1.4 points  
+            * LOW: Best score < 6.0 AND difference < 0.8 points
+
+            **KEY DIFFERENTIATORS:**
+            - [List 3-4 main reasons why the winner excels over others]
+            - [Mention any close competitors and what they lacked]
+            - [Note any major flaws in lower-ranked candidates]
+
+            **QUALITY ASSESSMENT:**
+            - EXCELLENT: Overall score ≥ 9.0 (near-perfect match)
+            - GOOD: Overall score 7.0-8.9 (strong similarity with minor differences)
+            - ACCEPTABLE: Overall score 5.0-6.9 (recognizable similarity with notable differences)
+            - POOR: Overall score 3.0-4.9 (some similarity but major differences)
+            - VERY_POOR: Overall score < 3.0 (little to no similarity)
+
+            RESPONSE FORMAT:
+            <answer>CANDIDATE_{{A/B/C/D/E}}</answer>
+            <score_a>[numerical score for candidate A]</score_a>
+            <score_b>[numerical score for candidate B]</score_b>
+            <score_c>[numerical score for candidate C]</score_c>
+            <score_d>[numerical score for candidate D]</score_d>
+            <score_e>[numerical score for candidate E]</score_e>
+            <confidence>[HIGH/MEDIUM/LOW]</confidence>
+            <explanation>[Complete analysis as structured above]</explanation>
+        """
+
+        # Format the message for VLM call  
+        messages = format_message(user_prompt=user_prompt)
+        
+        # Call VLM with target image first, then all 5 candidates
+        all_image_paths = [target_image_path] + candidate_paths
+        response = call_vlm(
+            messages, 
+            image_paths=all_image_paths, 
+            model_name=self.model_name
+        )
+        
+        # Log the response
+        logging.info(f"VLM Multi-Candidate Judge Response: {response}")
+        
+        try:
+            # Parse the structured response
+            winner_candidate = parse_answer(response)  # Should return "CANDIDATE_A", "CANDIDATE_B", etc.
+            
+            # Extract individual scores
+            scores = []
+            for letter in ['a', 'b', 'c', 'd', 'e']:
+                try:
+                    score = float(parse_between_tags(response, f"score_{letter}"))
+                    scores.append(score)
+                except (ValueError, TypeError):
+                    logging.warning(f"Could not parse score for candidate {letter.upper()}, defaulting to 0.0")
+                    scores.append(0.0)
+            
+            confidence_level = parse_between_tags(response, "confidence")
+            analysis = parse_between_tags(response, "explanation")
+            
+            # Determine best candidate index and path
+            candidate_mapping = {
+                "CANDIDATE_A": 0, "CANDIDATE_B": 1, "CANDIDATE_C": 2, 
+                "CANDIDATE_D": 3, "CANDIDATE_E": 4
+            }
+            
+            if winner_candidate in candidate_mapping:
+                best_idx = candidate_mapping[winner_candidate]
+            else:
+                # Fallback to highest score
+                best_idx = scores.index(max(scores))
+                logging.warning(f"Could not parse winner candidate, using highest score: index {best_idx}")
+            
+            best_candidate_path = candidate_paths[best_idx]
+            
+            # Calculate rankings (1=best, 5=worst)
+            sorted_indices = sorted(range(len(scores)), key=lambda x: scores[x], reverse=True)
+            rankings = [0] * len(scores)
+            for rank, idx in enumerate(sorted_indices):
+                rankings[idx] = rank + 1
+            
+            # Calculate score difference between best and second best
+            sorted_scores = sorted(scores, reverse=True)
+            score_difference = sorted_scores[0] - sorted_scores[1] if len(sorted_scores) >= 2 else 0.0
+            
+            # Convert confidence level to numerical score
+            confidence_map = {"HIGH": 0.9, "MEDIUM": 0.7, "LOW": 0.5}
+            confidence_score = confidence_map.get(confidence_level, 0.5)
+            
+            logging.info(f"Best candidate: {best_candidate_path} (index {best_idx}) with score {scores[best_idx]:.2f}")
+            
+            return {
+                'best_candidate': best_candidate_path,
+                'best_candidate_index': best_idx,
+                'all_scores': scores,
+                'rankings': rankings,
+                'analysis': analysis,
+                'confidence': confidence_score,
+                'confidence_level': confidence_level,
+                'score_difference': score_difference,
+                'winner_score': scores[best_idx],
+                'candidate_mapping': {
+                    f'candidate_{i}': {'path': path, 'score': score, 'rank': rank} 
+                    for i, (path, score, rank) in enumerate(zip(candidate_paths, scores, rankings))
+                }
+            }
+            
+        except Exception as e:
+            logging.error(f"Error parsing VLM multi-candidate response: {e}")
+            # Fallback: return candidate with highest score or first one
+            try:
+                # Try to extract any scores we can find
+                fallback_scores = []
+                for letter in ['a', 'b', 'c', 'd', 'e']:
+                    try:
+                        score = float(parse_between_tags(response, f"score_{letter}"))
+                        fallback_scores.append(score)
+                    except:
+                        fallback_scores.append(0.0)
+                
+                best_idx = fallback_scores.index(max(fallback_scores))
+                
+                return {
+                    'best_candidate': candidate_paths[best_idx],
+                    'best_candidate_index': best_idx,
+                    'all_scores': fallback_scores,
+                    'rankings': list(range(1, 6)),  # Default rankings
+                    'analysis': response,  # Raw response as fallback
+                    'confidence': 0.5,
+                    'confidence_level': 'LOW',
+                    'score_difference': 0.0,
+                    'winner_score': fallback_scores[best_idx],
+                    'candidate_mapping': {
+                        f'candidate_{i}': {'path': path, 'score': score, 'rank': i+1} 
+                        for i, (path, score) in enumerate(zip(candidate_paths, fallback_scores))
+                    }
+                }
+            except:
+                # Ultimate fallback: return first candidate
+                return {
+                    'best_candidate': candidate_paths[0],
+                    'best_candidate_index': 0,
+                    'all_scores': [0.0] * 5,
+                    'rankings': list(range(1, 6)),
+                    'analysis': response,
+                    'confidence': 0.3,
+                    'confidence_level': 'LOW',
+                    'score_difference': 0.0,
+                    'winner_score': 0.0,
+                    'candidate_mapping': {
+                        f'candidate_{i}': {'path': path, 'score': 0.0, 'rank': i+1} 
+                        for i, path in enumerate(candidate_paths)
+                    }
+                }
 
     def get_memory_summary(self) -> Dict[str, Any]:
         """Get a summary of the current memory state."""

@@ -1,0 +1,372 @@
+{
+  "experiment_id": 28,
+  "experiment_name": "batch_01_028",
+  "scene_type": "random",
+  "base_scene": [
+    {
+      "shape_type": "rectangle",
+      "x": 422,
+      "y": 88,
+      "scale_x": 144,
+      "scale_y": 144,
+      "fill_color": "gray",
+      "stroke_color": "yellow",
+      "stroke_width": 3,
+      "rotation": 180,
+      "opacity": 1.0
+    },
+    {
+      "shape_type": "rectangle",
+      "x": 350,
+      "y": 200,
+      "scale_x": 100,
+      "scale_y": 140,
+      "fill_color": "magenta",
+      "stroke_color": "green",
+      "stroke_width": 3,
+      "rotation": 76,
+      "opacity": 0.9
+    },
+    {
+      "shape_type": "ellipse",
+      "x": 100,
+      "y": 300,
+      "scale_x": 90,
+      "scale_y": 100,
+      "fill_color": "blue",
+      "stroke_color": "green",
+      "stroke_width": 2,
+      "rotation": 257,
+      "opacity": 0.7
+    },
+    {
+      "shape_type": "rectangle",
+      "x": 300,
+      "y": 150,
+      "scale_x": 50,
+      "scale_y": 50,
+      "fill_color": "lime",
+      "stroke_color": "purple",
+      "stroke_width": 1,
+      "rotation": 90,
+      "opacity": 1.0
+    }
+  ],
+  "mutations": [
+    {
+      "mutation_id": 1,
+      "intensity": 0.04,
+      "scene_data": [
+        {
+          "shape_type": "rectangle",
+          "x": 440,
+          "y": 77,
+          "scale_x": 144,
+          "scale_y": 144,
+          "fill_color": "gray",
+          "stroke_color": "yellow",
+          "stroke_width": 3,
+          "rotation": 180,
+          "opacity": 1.0
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 359,
+          "y": 199,
+          "scale_x": 100,
+          "scale_y": 140,
+          "fill_color": "magenta",
+          "stroke_color": "green",
+          "stroke_width": 3,
+          "rotation": 76,
+          "opacity": 0.9
+        },
+        {
+          "shape_type": "ellipse",
+          "x": 100,
+          "y": 306,
+          "scale_x": 90,
+          "scale_y": 100,
+          "fill_color": "blue",
+          "stroke_color": "green",
+          "stroke_width": 2,
+          "rotation": 257,
+          "opacity": 0.7
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 305,
+          "y": 128,
+          "scale_x": 50,
+          "scale_y": 50,
+          "fill_color": "lime",
+          "stroke_color": "purple",
+          "stroke_width": 1,
+          "rotation": 90,
+          "opacity": 1.0
+        }
+      ]
+    },
+    {
+      "mutation_id": 2,
+      "intensity": 0.23,
+      "scene_data": [
+        {
+          "shape_type": "rectangle",
+          "x": 304,
+          "y": 115,
+          "scale_x": 117,
+          "scale_y": 117,
+          "fill_color": "gray",
+          "stroke_color": "yellow",
+          "stroke_width": 3,
+          "rotation": 180,
+          "opacity": 1.0
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 478,
+          "y": 202,
+          "scale_x": 115,
+          "scale_y": 161,
+          "fill_color": "magenta",
+          "stroke_color": "green",
+          "stroke_width": 3,
+          "rotation": 76,
+          "opacity": 0.9
+        },
+        {
+          "shape_type": "ellipse",
+          "x": 96,
+          "y": 251,
+          "scale_x": 84,
+          "scale_y": 94,
+          "fill_color": "blue",
+          "stroke_color": "green",
+          "stroke_width": 2,
+          "rotation": 257,
+          "opacity": 0.7
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 355,
+          "y": 199,
+          "scale_x": 52,
+          "scale_y": 52,
+          "fill_color": "lime",
+          "stroke_color": "purple",
+          "stroke_width": 1,
+          "rotation": 90,
+          "opacity": 1.0
+        }
+      ]
+    },
+    {
+      "mutation_id": 3,
+      "intensity": 0.23,
+      "scene_data": [
+        {
+          "shape_type": "rectangle",
+          "x": 323,
+          "y": 214,
+          "scale_x": 127,
+          "scale_y": 127,
+          "fill_color": "gray",
+          "stroke_color": "yellow",
+          "stroke_width": 3,
+          "rotation": 180,
+          "opacity": 1.0
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 326,
+          "y": 326,
+          "scale_x": 95,
+          "scale_y": 133,
+          "fill_color": "magenta",
+          "stroke_color": "green",
+          "stroke_width": 3,
+          "rotation": 76,
+          "opacity": 0.9
+        },
+        {
+          "shape_type": "ellipse",
+          "x": 138,
+          "y": 411,
+          "scale_x": 102,
+          "scale_y": 113,
+          "fill_color": "blue",
+          "stroke_color": "green",
+          "stroke_width": 2,
+          "rotation": 257,
+          "opacity": 0.7
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 165,
+          "y": 268,
+          "scale_x": 58,
+          "scale_y": 58,
+          "fill_color": "lime",
+          "stroke_color": "purple",
+          "stroke_width": 1,
+          "rotation": 90,
+          "opacity": 1.0
+        }
+      ]
+    },
+    {
+      "mutation_id": 4,
+      "intensity": 0.26,
+      "scene_data": [
+        {
+          "shape_type": "rectangle",
+          "x": 491,
+          "y": 50,
+          "scale_x": 123,
+          "scale_y": 123,
+          "fill_color": "gray",
+          "stroke_color": "yellow",
+          "stroke_width": 3,
+          "rotation": 180,
+          "opacity": 1.0
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 457,
+          "y": 187,
+          "scale_x": 84,
+          "scale_y": 118,
+          "fill_color": "magenta",
+          "stroke_color": "green",
+          "stroke_width": 3,
+          "rotation": 76,
+          "opacity": 0.9
+        },
+        {
+          "shape_type": "ellipse",
+          "x": 50,
+          "y": 224,
+          "scale_x": 83,
+          "scale_y": 92,
+          "fill_color": "blue",
+          "stroke_color": "green",
+          "stroke_width": 2,
+          "rotation": 257,
+          "opacity": 0.7
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 204,
+          "y": 111,
+          "scale_x": 47,
+          "scale_y": 47,
+          "fill_color": "lime",
+          "stroke_color": "purple",
+          "stroke_width": 1,
+          "rotation": 90,
+          "opacity": 1.0
+        }
+      ]
+    },
+    {
+      "mutation_id": 5,
+      "intensity": 0.76,
+      "scene_data": [
+        {
+          "shape_type": "rectangle",
+          "x": 304,
+          "y": 369,
+          "scale_x": 59,
+          "scale_y": 59,
+          "fill_color": "cyan",
+          "stroke_color": "purple",
+          "stroke_width": 3,
+          "rotation": 327,
+          "opacity": 1.0
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 50,
+          "y": 50,
+          "scale_x": 30,
+          "scale_y": 42,
+          "fill_color": "green",
+          "stroke_color": "red",
+          "stroke_width": 3,
+          "rotation": 313,
+          "opacity": 0.9
+        },
+        {
+          "shape_type": "ellipse",
+          "x": 50,
+          "y": 50,
+          "scale_x": 56,
+          "scale_y": 63,
+          "fill_color": "pink",
+          "stroke_color": "green",
+          "stroke_width": 2,
+          "rotation": 3,
+          "opacity": 0.7
+        },
+        {
+          "shape_type": "rectangle",
+          "x": 550,
+          "y": 430,
+          "scale_x": 67,
+          "scale_y": 67,
+          "fill_color": "lime",
+          "stroke_color": "purple",
+          "stroke_width": 1,
+          "rotation": 38,
+          "opacity": 1.0
+        }
+      ]
+    }
+  ],
+  "intensities": [
+    0.04,
+    0.23,
+    0.23,
+    0.26,
+    0.76
+  ],
+  "num_mutations": 5,
+  "intensity_range": [
+    0.0,
+    1.0
+  ],
+  "image_paths": [
+    [
+      "original",
+      0.0,
+      "perturbation_vlm_experiments/batch_01_028/batch_01_028_original.png"
+    ],
+    [
+      "mutation_1",
+      0.04,
+      "perturbation_vlm_experiments/batch_01_028/batch_01_028_mutation_01_intensity_0.04.png"
+    ],
+    [
+      "mutation_2",
+      0.23,
+      "perturbation_vlm_experiments/batch_01_028/batch_01_028_mutation_02_intensity_0.23.png"
+    ],
+    [
+      "mutation_3",
+      0.23,
+      "perturbation_vlm_experiments/batch_01_028/batch_01_028_mutation_03_intensity_0.23.png"
+    ],
+    [
+      "mutation_4",
+      0.26,
+      "perturbation_vlm_experiments/batch_01_028/batch_01_028_mutation_04_intensity_0.26.png"
+    ],
+    [
+      "mutation_5",
+      0.76,
+      "perturbation_vlm_experiments/batch_01_028/batch_01_028_mutation_05_intensity_0.76.png"
+    ]
+  ],
+  "experiment_dir": "perturbation_vlm_experiments/batch_01_028"
+}

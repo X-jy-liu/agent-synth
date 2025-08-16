@@ -446,43 +446,43 @@ def main():
     img_save_dir = "/home/jingyang/agent-synth/data/render_svg_mutator"
     os.makedirs(img_save_dir, exist_ok=True)
 
-    # Example 1: Generate scene with custom intensity values
-    print("Generating scenes with numeric intensity control...")
-    generator.save_scene_with_intensities(
-        "test_scene_1",
-        intensities=[0.05, 0.1, 0.2, 0.4, 0.6, 0.8]
-    )
+    # # Example 1: Generate scene with custom intensity values
+    # print("Generating scenes with numeric intensity control...")
+    # generator.save_scene_with_intensities(
+    #     "test_scene_1",
+    #     intensities=[0.05, 0.1, 0.2, 0.4, 0.6, 0.8]
+    # )
     
-    # Example 2: Generate geometric patterns (rectangles and ellipses only)
-    print("\nGenerating geometric patterns...")
+    # # Example 2: Generate geometric patterns (rectangles and ellipses only)
+    # print("\nGenerating geometric patterns...")
     
-    # Grid pattern
-    grid_shapes = generator.create_geometric_pattern("grid")
-    generator.agent.clear()
-    generator.agent.create_from_dict(grid_shapes)
-    generator.agent.save_png("pattern_grid.png")
+    # # Grid pattern
+    # grid_shapes = generator.create_geometric_pattern("grid")
+    # generator.agent.clear()
+    # generator.agent.create_from_dict(grid_shapes)
+    # generator.agent.save_png("pattern_grid.png")
     
-    # Alternating pattern
-    alt_shapes = generator.create_geometric_pattern("alternating")
-    generator.agent.clear()
-    generator.agent.create_from_dict(alt_shapes)
-    generator.agent.save_png("pattern_alternating.png")
+    # # Alternating pattern
+    # alt_shapes = generator.create_geometric_pattern("alternating")
+    # generator.agent.clear()
+    # generator.agent.create_from_dict(alt_shapes)
+    # generator.agent.save_png("pattern_alternating.png")
     
-    # Example 3: Controlled mutation testing with specific intensities
-    print("\nGenerating controlled mutation tests...")
+    # # Example 3: Controlled mutation testing with specific intensities
+    # print("\nGenerating controlled mutation tests...")
     
-    # Test each mutation type independently
-    mutation_tests = ["position", "scale", "rotation", "color", "shape_type"]
+    # # Test each mutation type independently
+    # mutation_tests = ["position", "scale", "rotation", "color", "shape_type"]
     
-    for mutation_type in mutation_tests:
-        print(f"Testing {mutation_type} mutations...")
-        generator.create_controlled_mutation_test(
-            mutation_type=mutation_type,
-            intensities=[0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
-        )
+    # for mutation_type in mutation_tests:
+    #     print(f"Testing {mutation_type} mutations...")
+    #     generator.create_controlled_mutation_test(
+    #         mutation_type=mutation_type,
+    #         intensities=[0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
+    #     )
     
-    # Example 4: Fine-grained control demonstration
-    print("\nDemonstrating fine-grained intensity control...")
+    # # Example 4: Fine-grained control demonstration
+    # print("\nDemonstrating fine-grained intensity control...")
     
     # Create base scene
     base_scene = [

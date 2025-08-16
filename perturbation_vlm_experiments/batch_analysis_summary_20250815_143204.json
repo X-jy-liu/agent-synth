@@ -1,0 +1,9 @@
+{
+  "total_experiments": 50,
+  "success_count": 38,
+  "failure_count": 12,
+  "success_rate": 0.76,
+  "model_name": "gemini-2.5-pro",
+  "analysis_timestamp": "2025-08-15T14:32:04.501996",
+  "experiments_directory": "perturbation_vlm_experiments"
+}

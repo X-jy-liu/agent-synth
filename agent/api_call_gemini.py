@@ -39,32 +39,65 @@ def call_llm(
     # print(response.text)
     return response.text
 
-
 def call_vlm(
     messages: List[Dict[str, str]],
-    image_path: str,
+    image_paths: List[str],
     model_name: str = "gemini-2.5-pro",
     temperature: float = 0.3,
     max_tokens: int = 5000,
 ) -> str:
+    """
+    Gemini version of call_vlm with support for multiple images.
     
-    image = Image.open(image_path)
+    :param messages: Chat messages in OpenAI format [{"role": "user", "content": "..."}]
+    :param image_paths: List of paths to image files (png/jpg/etc)
+    :param model_name: Gemini model name (e.g., "gemini-2.5-pro", "gemini-2.5-flash")
+    :param temperature: Sampling temperature
+    :param max_tokens: Maximum output tokens
+    :return: Model response text
+    """
     
+    # Load all images
+    images = []
+    for path in image_paths:
+        try:
+            image = Image.open(path)
+            images.append(image)
+        except Exception as e:
+            raise FileNotFoundError(f"Could not load image: {path} - {e}")
+    
+    # Format messages for Gemini and extract system instruction
     gemini_messages, sys_instruction = format_for_gemini(messages=messages)
-    gemini_messages.append(image)
     
+    # Create content list: text + all images
+    # Gemini expects content as a list where you can mix text and images
+    content_parts = []
+    
+    # Add the main text prompt (last user message)
+    last_user_message = None
+    for msg in reversed(messages):
+        if msg["role"] == "user":
+            last_user_message = msg["content"]
+            break
+    
+    if last_user_message:
+        content_parts.append(last_user_message)
+    
+    # Add all images to the content
+    content_parts.extend(images)
+    
+    # Generate response
     response = client.models.generate_content(
         model=model_name,
         config=types.GenerateContentConfig(
             system_instruction=sys_instruction,
             temperature=temperature,
-            max_output_tokens=max_tokens),
-        contents=gemini_messages
+            max_output_tokens=max_tokens
+        ),
+        contents=content_parts
     )
     
     return response.text
-
-
 # Example usage
 if __name__ == "__main__":
     # 1) Text-only

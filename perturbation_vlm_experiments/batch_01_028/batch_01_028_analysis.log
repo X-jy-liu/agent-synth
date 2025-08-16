@@ -1,0 +1,16 @@
+2025-08-15 12:49:56 - experiment_batch_01_028 - INFO - Starting analysis of experiment: batch_01_028
+2025-08-15 12:49:56 - experiment_batch_01_028 - INFO - Model used: gemini-2.5-flash
+2025-08-15 12:49:56 - experiment_batch_01_028 - INFO - Ground truth image: batch_01_028_original.png
+2025-08-15 12:49:56 - experiment_batch_01_028 - INFO - Found 5 candidate images
+2025-08-15 12:49:56 - experiment_batch_01_028 - INFO - Candidate images: ['batch_01_028_mutation_02_intensity_0.23.png', 'batch_01_028_mutation_05_intensity_0.76.png', 'batch_01_028_mutation_04_intensity_0.26.png', 'batch_01_028_mutation_01_intensity_0.04.png', 'batch_01_028_mutation_03_intensity_0.23.png']
+2025-08-15 12:49:56 - experiment_batch_01_028 - INFO - Reference image (lowest intensity): batch_01_028_mutation_01_intensity_0.04.png
+2025-08-15 12:49:56 - experiment_batch_01_028 - INFO - Reference intensity: 0.04
+2025-08-15 12:49:56 - experiment_batch_01_028 - INFO - Initializing VLM agent with model: gemini-2.5-flash
+2025-08-15 12:49:56 - experiment_batch_01_028 - INFO - Starting VLM evaluation...
+2025-08-15 12:50:21 - experiment_batch_01_028 - INFO - VLM evaluation completed in 25.02 seconds
+2025-08-15 12:50:21 - experiment_batch_01_028 - INFO - VLM chosen best candidate: batch_01_028_mutation_01_intensity_0.04.png
+2025-08-15 12:50:21 - experiment_batch_01_028 - INFO - VLM confidence: 0.9
+2025-08-15 12:50:21 - experiment_batch_01_028 - INFO - VLM scores: [7.8, 0.0, 7.3, 10.0, 7.3]
+2025-08-15 12:50:21 - experiment_batch_01_028 - INFO - ✅ SUCCESS: VLM choice matches reference image
+2025-08-15 12:50:21 - experiment_batch_01_028 - INFO - Results saved to: batch_01_028_results.json
+2025-08-15 12:50:21 - experiment_batch_01_028 - INFO - Experiment batch_01_028 completed successfully
