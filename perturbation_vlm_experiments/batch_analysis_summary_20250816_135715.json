@@ -1,0 +1,9 @@
+{
+  "total_experiments": 50,
+  "success_count": 31,
+  "failure_count": 19,
+  "success_rate": 0.62,
+  "model_name": "gemini-2.5-flash",
+  "analysis_timestamp": "2025-08-16T13:57:15.349048",
+  "experiments_directory": "perturbation_vlm_experiments"
+}

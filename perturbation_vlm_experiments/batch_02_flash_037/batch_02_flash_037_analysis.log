@@ -1,0 +1,18 @@
+2025-08-16 13:51:27 - experiment_batch_02_flash_037 - INFO - Starting analysis of experiment: batch_02_flash_037
+2025-08-16 13:51:27 - experiment_batch_02_flash_037 - INFO - Model used: gemini-2.5-flash
+2025-08-16 13:51:27 - experiment_batch_02_flash_037 - INFO - Ground truth image: batch_02_flash_037_original.png
+2025-08-16 13:51:27 - experiment_batch_02_flash_037 - INFO - Found 5 candidate images
+2025-08-16 13:51:27 - experiment_batch_02_flash_037 - INFO - Candidate images: ['batch_02_flash_037_mutation_05_intensity_0.86.png', 'batch_02_flash_037_mutation_02_intensity_0.38.png', 'batch_02_flash_037_mutation_01_intensity_0.16.png', 'batch_02_flash_037_mutation_04_intensity_0.79.png', 'batch_02_flash_037_mutation_03_intensity_0.47.png']
+2025-08-16 13:51:27 - experiment_batch_02_flash_037 - INFO - Reference image (lowest intensity): batch_02_flash_037_mutation_01_intensity_0.16.png
+2025-08-16 13:51:27 - experiment_batch_02_flash_037 - INFO - Reference intensity: 0.16
+2025-08-16 13:51:27 - experiment_batch_02_flash_037 - INFO - Initializing VLM agent with model: gemini-2.5-flash
+2025-08-16 13:51:27 - experiment_batch_02_flash_037 - INFO - Starting VLM evaluation...
+2025-08-16 13:51:51 - experiment_batch_02_flash_037 - INFO - VLM evaluation completed in 24.37 seconds
+2025-08-16 13:51:51 - experiment_batch_02_flash_037 - INFO - VLM chosen best candidate: batch_02_flash_037_mutation_02_intensity_0.38.png
+2025-08-16 13:51:51 - experiment_batch_02_flash_037 - INFO - VLM confidence: 0.7
+2025-08-16 13:51:51 - experiment_batch_02_flash_037 - INFO - VLM scores: [0.5, 10.0, 8.8, 4.2, 7.8]
+2025-08-16 13:51:51 - experiment_batch_02_flash_037 - WARNING - ❌ FAILURE: VLM choice does not match reference image
+2025-08-16 13:51:51 - experiment_batch_02_flash_037 - WARNING - Expected: batch_02_flash_037_mutation_01_intensity_0.16.png
+2025-08-16 13:51:51 - experiment_batch_02_flash_037 - WARNING - Got: batch_02_flash_037_mutation_02_intensity_0.38.png
+2025-08-16 13:51:51 - experiment_batch_02_flash_037 - INFO - Results saved to: batch_02_flash_037_results.json
+2025-08-16 13:51:51 - experiment_batch_02_flash_037 - INFO - Experiment batch_02_flash_037 completed successfully

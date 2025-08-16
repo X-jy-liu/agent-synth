@@ -1,0 +1,79 @@
+{
+  "experiment_name": "batch_02_flash_004",
+  "analysis_timestamp": "2025-08-16T13:38:09.542933",
+  "model_name": "gemini-2.5-flash",
+  "success": true,
+  "gt_image": "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_original.png",
+  "candidate_images": [
+    "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_01_intensity_0.10.png",
+    "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_05_intensity_0.98.png",
+    "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_04_intensity_0.68.png",
+    "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_03_intensity_0.46.png",
+    "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_02_intensity_0.39.png"
+  ],
+  "reference_image": "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_01_intensity_0.10.png",
+  "reference_intensity": 0.1,
+  "vlm_chosen_image": "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_01_intensity_0.10.png",
+  "vlm_confidence": 0.5,
+  "vlm_scores": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "vlm_analysis": "",
+  "vlm_full_response": {
+    "best_candidate": "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_01_intensity_0.10.png",
+    "best_candidate_index": 0,
+    "all_scores": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rankings": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "analysis": "",
+    "confidence": 0.5,
+    "confidence_level": "",
+    "score_difference": 0.0,
+    "winner_score": 0.0,
+    "candidate_mapping": {
+      "candidate_0": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_01_intensity_0.10.png",
+        "score": 0.0,
+        "rank": 1
+      },
+      "candidate_1": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_05_intensity_0.98.png",
+        "score": 0.0,
+        "rank": 2
+      },
+      "candidate_2": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_04_intensity_0.68.png",
+        "score": 0.0,
+        "rank": 3
+      },
+      "candidate_3": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_03_intensity_0.46.png",
+        "score": 0.0,
+        "rank": 4
+      },
+      "candidate_4": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_004/batch_02_flash_004_mutation_02_intensity_0.39.png",
+        "score": 0.0,
+        "rank": 5
+      }
+    }
+  },
+  "vlm_duration_seconds": 27.711449,
+  "analysis_start_time": "2025-08-16T13:37:41.830806",
+  "analysis_end_time": "2025-08-16T13:38:09.542255"
+}

@@ -1,0 +1,79 @@
+{
+  "experiment_name": "batch_02_flash_021",
+  "analysis_timestamp": "2025-08-16T13:45:11.366868",
+  "model_name": "gemini-2.5-flash",
+  "success": true,
+  "gt_image": "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_original.png",
+  "candidate_images": [
+    "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_01_intensity_0.19.png",
+    "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_02_intensity_0.20.png",
+    "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_05_intensity_0.94.png",
+    "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_03_intensity_0.51.png",
+    "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_04_intensity_0.73.png"
+  ],
+  "reference_image": "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_01_intensity_0.19.png",
+  "reference_intensity": 0.19,
+  "vlm_chosen_image": "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_01_intensity_0.19.png",
+  "vlm_confidence": 0.7,
+  "vlm_scores": [
+    9.17,
+    9.0,
+    0.0,
+    6.5,
+    0.67
+  ],
+  "vlm_analysis": "",
+  "vlm_full_response": {
+    "best_candidate": "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_01_intensity_0.19.png",
+    "best_candidate_index": 0,
+    "all_scores": [
+      9.17,
+      9.0,
+      0.0,
+      6.5,
+      0.67
+    ],
+    "rankings": [
+      1,
+      2,
+      5,
+      3,
+      4
+    ],
+    "analysis": "",
+    "confidence": 0.7,
+    "confidence_level": "MEDIUM",
+    "score_difference": 0.16999999999999993,
+    "winner_score": 9.17,
+    "candidate_mapping": {
+      "candidate_0": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_01_intensity_0.19.png",
+        "score": 9.17,
+        "rank": 1
+      },
+      "candidate_1": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_02_intensity_0.20.png",
+        "score": 9.0,
+        "rank": 2
+      },
+      "candidate_2": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_05_intensity_0.94.png",
+        "score": 0.0,
+        "rank": 5
+      },
+      "candidate_3": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_03_intensity_0.51.png",
+        "score": 6.5,
+        "rank": 3
+      },
+      "candidate_4": {
+        "path": "perturbation_vlm_experiments/batch_02_flash_021/batch_02_flash_021_mutation_04_intensity_0.73.png",
+        "score": 0.67,
+        "rank": 4
+      }
+    }
+  },
+  "vlm_duration_seconds": 25.64858,
+  "analysis_start_time": "2025-08-16T13:44:45.717601",
+  "analysis_end_time": "2025-08-16T13:45:11.366181"
+}

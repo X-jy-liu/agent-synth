@@ -1,0 +1,30 @@
+============================================================
+SIMPLE VLM CHOICE ANALYSIS
+============================================================
+Question: Which intensity ranges does VLM choose as 'least corrupted'?
+(Correct answer is always Range 1: 0.0-0.2)
+
+Analyzed 50 VLM choices
+
+VLM'S CHOICE FREQUENCY:
+------------------------------
+Range 1 (0.0-0.2) ✅       |  31 times ( 62.0%)
+Range 2 (0.2-0.4) ❌       |   8 times ( 16.0%)
+Range 5 (0.8-1.0) ❌       |   4 times (  8.0%)
+Range 3 (0.4-0.6) ❌       |   4 times (  8.0%)
+Range 4 (0.6-0.8) ❌       |   3 times (  6.0%)
+
+WHEN VLM MAKES MISTAKES, IT CHOOSES:
+----------------------------------------
+Range 2 (0.2-0.4) ❌       |   8 times ( 42.1% of errors)
+Range 5 (0.8-1.0) ❌       |   4 times ( 21.1% of errors)
+Range 3 (0.4-0.6) ❌       |   4 times ( 21.1% of errors)
+Range 4 (0.6-0.8) ❌       |   3 times ( 15.8% of errors)
+
+============================================================
+KEY INSIGHTS:
+============================================================
+✅ VLM chooses correctly (Range 1): 62.0% of the time
+❌ VLM makes mistakes: 38.0% of the time
+🔴 Most common mistake: Range 2 (0.2-0.4) ❌ (8 times)
+📊 Error pattern: 42.1% choose adjacent range (Range 2), 57.9% choose distant ranges
